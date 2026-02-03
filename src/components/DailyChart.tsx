@@ -9,9 +9,10 @@ import {
   Legend,
 } from 'recharts'
 import { formatDate, formatCurrency } from '../lib/utils'
+import type { DailySummary } from '../lib/supabase'
 
 interface DailyChartProps {
-  data: any[]
+  data: DailySummary[]
   isSales: boolean
 }
 
@@ -25,12 +26,21 @@ export function DailyChart({ data, isSales }: DailyChartProps) {
   }
 
   const chartData = data.map(d => ({
-    ...d,
     dateFormatted: formatDate(d.date),
+    date: d.date,
+    spend: d.total_spend || 0,
+    conversions: isSales ? (d.sheet_sales || 0) : (d.total_leads || 0),
+    impressions: d.total_impressions || 0,
+    clicks: d.total_link_clicks || 0,
+    pageViews: d.total_page_views || 0,
+    revenue: d.sheet_revenue || 0,
   }))
+
+  const conversionLabel = isSales ? 'Vendas' : 'Leads'
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const row = payload[0]?.payload
       return (
         <div className="bg-gray-900 border border-white/20 rounded-lg p-3 shadow-xl">
           <p className="text-sm font-medium text-white mb-2">{label}</p>
@@ -49,6 +59,13 @@ export function DailyChart({ data, isSales }: DailyChartProps) {
               </span>
             </div>
           ))}
+          {isSales && row?.revenue > 0 && (
+            <div className="flex items-center gap-2 text-sm mt-1 pt-1 border-t border-white/10">
+              <div className="w-2 h-2 rounded-full bg-purple-400" />
+              <span className="text-white/60">Receita:</span>
+              <span className="text-purple-400 font-medium">{formatCurrency(row.revenue)}</span>
+            </div>
+          )}
         </div>
       )
     }
@@ -101,7 +118,7 @@ export function DailyChart({ data, isSales }: DailyChartProps) {
         
         <Legend 
           wrapperStyle={{ paddingTop: '20px' }}
-          formatter={(value) => <span className="text-white/60 text-sm">{value}</span>}
+          formatter={(value: string) => <span className="text-white/60 text-sm">{value}</span>}
         />
         
         <Area
@@ -118,8 +135,8 @@ export function DailyChart({ data, isSales }: DailyChartProps) {
         <Area
           yAxisId="right"
           type="monotone"
-          dataKey={isSales ? 'purchases' : 'leads'}
-          name={isSales ? 'Vendas' : 'Leads'}
+          dataKey="conversions"
+          name={conversionLabel}
           stroke="#10b981"
           strokeWidth={2}
           fillOpacity={1}

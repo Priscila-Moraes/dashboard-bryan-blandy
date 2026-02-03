@@ -38,6 +38,22 @@ export interface AdCreative {
   campaign_name: string
   product_name: string
   ad_name: string
+  ad_id: string
+  spend: number
+  impressions: number
+  link_clicks: number
+  leads: number
+  purchases: number
+  cpl: number
+  cpa: number
+  ctr: number
+  instagram_permalink: string
+}
+
+export interface AggregatedCreative {
+  ad_name: string
+  ad_id: string
+  campaign_name: string
   spend: number
   impressions: number
   link_clicks: number
@@ -109,7 +125,6 @@ export async function getAggregatedMetrics(
     }
   )
 
-  // Calcular métricas derivadas
   const cpm = totals.impressions > 0 ? (totals.spend / totals.impressions) * 1000 : 0
   const ctr = totals.impressions > 0 ? (totals.linkClicks / totals.impressions) * 100 : 0
   const cpl = totals.leads > 0 ? totals.spend / totals.leads : 0
@@ -153,4 +168,51 @@ export async function getAdCreatives(
   }
 
   return data || []
+}
+
+// Agregar criativos por ad_id (soma spend/impressions/clicks de múltiplos dias)
+export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[] {
+  const map = new Map<string, AggregatedCreative>()
+
+  for (const c of creatives) {
+    const key = c.ad_id || c.ad_name
+    const existing = map.get(key)
+
+    if (existing) {
+      existing.spend += c.spend || 0
+      existing.impressions += c.impressions || 0
+      existing.link_clicks += c.link_clicks || 0
+      existing.leads += c.leads || 0
+      existing.purchases += c.purchases || 0
+      if (c.instagram_permalink) {
+        existing.instagram_permalink = c.instagram_permalink
+      }
+    } else {
+      map.set(key, {
+        ad_name: c.ad_name,
+        ad_id: c.ad_id,
+        campaign_name: c.campaign_name,
+        spend: c.spend || 0,
+        impressions: c.impressions || 0,
+        link_clicks: c.link_clicks || 0,
+        leads: c.leads || 0,
+        purchases: c.purchases || 0,
+        cpl: 0,
+        cpa: 0,
+        ctr: 0,
+        instagram_permalink: c.instagram_permalink || '',
+      })
+    }
+  }
+
+  // Recalcular métricas derivadas após agregação
+  const result = Array.from(map.values()).map(c => ({
+    ...c,
+    cpl: c.leads > 0 ? c.spend / c.leads : 0,
+    cpa: c.purchases > 0 ? c.spend / c.purchases : 0,
+    ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
+  }))
+
+  result.sort((a, b) => b.spend - a.spend)
+  return result
 }
