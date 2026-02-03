@@ -16,43 +16,41 @@ export function Funnel({ impressions, clicks, pageViews, conversions, conversion
     { label: conversionLabel, value: conversions, color: 'from-green-500 to-green-600' },
   ]
 
-  const maxValue = Math.max(...steps.map(s => s.value), 1)
+  // Fixed progressive widths for clean funnel shape
+  const widthPercents = [100, 70, 55, 40]
 
   return (
     <div className="space-y-3">
       {steps.map((step, index) => {
-        const widthPercent = Math.max((step.value / maxValue) * 100, 20)
         const rate = index > 0 && steps[index - 1].value > 0 
-          ? ((step.value / steps[index - 1].value) * 100).toFixed(1)
+          ? ((step.value / steps[index - 1].value) * 100).toFixed(1) + '%'
           : null
 
         return (
-          <div key={step.label} className="relative">
-            {/* Rate indicator */}
-            {rate && (
-              <div className="absolute -left-2 top-1/2 -translate-y-1/2 -translate-x-full text-xs text-white/40 hidden xl:block">
-                {rate}%
-              </div>
-            )}
-            
-            {/* Funnel step */}
-            <div
-              className={`relative h-14 bg-gradient-to-r ${step.color} rounded-lg flex items-center justify-between px-4 transition-all duration-500`}
-              style={{ 
-                width: `${widthPercent}%`,
-                clipPath: index < steps.length - 1 
-                  ? 'polygon(0 0, 100% 0, 97% 100%, 3% 100%)' 
-                  : 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'
-              }}
-            >
-              <span className="text-sm font-medium text-white/90">{step.label}</span>
-              <span className="text-lg font-bold text-white">{formatNumber(step.value)}</span>
+          <div key={step.label} className="flex items-center gap-3">
+            {/* Rate label (left side) */}
+            <div className="w-12 text-right shrink-0">
+              {rate ? (
+                <span className="text-xs text-white/40 font-medium">{rate}</span>
+              ) : (
+                <span className="text-xs text-white/20">—</span>
+              )}
             </div>
 
-            {/* Connector line */}
-            {index < steps.length - 1 && (
-              <div className="absolute left-1/2 -translate-x-1/2 w-px h-3 bg-white/20" />
-            )}
+            {/* Bar */}
+            <div className="flex-1 min-w-0">
+              <div
+                className={`bg-gradient-to-r ${step.color} rounded-lg flex items-center justify-between px-4 h-12`}
+                style={{ width: `${widthPercents[index]}%` }}
+              >
+                <span className="text-sm font-medium text-white/90 truncate mr-3">
+                  {step.label}
+                </span>
+                <span className="text-lg font-bold text-white whitespace-nowrap">
+                  {formatNumber(step.value)}
+                </span>
+              </div>
+            </div>
           </div>
         )
       })}
