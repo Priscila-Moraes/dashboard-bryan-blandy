@@ -53,6 +53,18 @@ export function getDateRange(preset: string): { start: string; end: string } {
       start.setDate(start.getDate() - 6)
       return { start: formatISO(start), end: formatISO(today) }
     }
+
+    case 'last14days': {
+      const start = new Date(today)
+      start.setDate(start.getDate() - 13)
+      return { start: formatISO(start), end: formatISO(today) }
+    }
+
+    case 'last30days': {
+      const start = new Date(today)
+      start.setDate(start.getDate() - 29)
+      return { start: formatISO(start), end: formatISO(today) }
+    }
     
     case 'thisMonth': {
       const start = new Date(today.getFullYear(), today.getMonth(), 1)
@@ -63,6 +75,10 @@ export function getDateRange(preset: string): { start: string; end: string } {
       const start = new Date(today.getFullYear(), today.getMonth() - 1, 1)
       const end = new Date(today.getFullYear(), today.getMonth(), 0)
       return { start: formatISO(start), end: formatISO(end) }
+    }
+
+    case 'allTime': {
+      return { start: '2026-01-20', end: formatISO(today) }
     }
     
     default:

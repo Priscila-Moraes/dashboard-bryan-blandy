@@ -266,6 +266,7 @@ export default function App() {
                 mqlRate={metrics.mqlRate}
                 cpa={metrics.cpa}
                 roas={metrics.roas}
+                spend={metrics.spend}
               />
             </div>
           </div>
