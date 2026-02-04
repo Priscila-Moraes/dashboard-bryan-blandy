@@ -69,6 +69,14 @@ export default function App() {
     loadData()
   }, [selectedProduct, dateRange])
 
+  // Auto-refresh a cada 5 minutos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData()
+    }, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [selectedProduct, dateRange])
+
   // Verificar se hoje está no range (dados parciais)
   const today = new Date().toISOString().split('T')[0]
   const includesPartialDay = dateRange.end >= today
