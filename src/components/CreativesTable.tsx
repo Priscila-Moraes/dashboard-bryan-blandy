@@ -14,9 +14,10 @@ interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
   totalSheetSales?: number
+  totalSheetLeads?: number
 }
 
-export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTableProps) {
+export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads }: CreativesTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('conversions')
 
   if (!data || data.length === 0) {
@@ -27,9 +28,11 @@ export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTabl
     )
   }
 
-  // Calcular vendas sem atribuição
+  // Calcular conversões sem atribuição
   const attributedSales = data.reduce((sum, c) => sum + (c.sheetPurchases || 0), 0)
-  const unattributed = isSales && totalSheetSales ? totalSheetSales - attributedSales : 0
+  const unattributedSales = isSales && totalSheetSales ? totalSheetSales - attributedSales : 0
+  const attributedLeads = data.reduce((sum, c) => sum + (c.sheetLeadsUtm || 0), 0)
+  const unattributedLeads = !isSales && totalSheetLeads ? totalSheetLeads - attributedLeads : 0
 
   const sortOptions: SortOption[] = [
     { key: 'conversions', label: isSales ? 'Vendas' : 'Leads' },
@@ -43,8 +46,9 @@ export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTabl
   const getSortValue = (c: AggregatedCreative, key: SortKey): number => {
     const cpc = c.link_clicks > 0 ? c.spend / c.link_clicks : 0
     const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : (c.purchases || 0)
+    const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : (c.leads || 0)
     switch (key) {
-      case 'conversions': return isSales ? realPurchases : (c.leads || 0)
+      case 'conversions': return isSales ? realPurchases : realLeads
       case 'spend': return c.spend || 0
       case 'clicks': return c.link_clicks || 0
       case 'cpc': return cpc
@@ -127,7 +131,8 @@ export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTabl
             {sorted.slice(0, 10).map((creative, index) => {
               const cpc = creative.link_clicks > 0 ? creative.spend / creative.link_clicks : 0
               const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases
-              const conversions = isSales ? realPurchases : creative.leads
+              const realLeads = creative.sheetLeadsUtm > 0 ? creative.sheetLeadsUtm : creative.leads
+              const conversions = isSales ? realPurchases : realLeads
               const costPerConversion = isSales ? creative.cpa : creative.cpl
 
               return (
@@ -203,15 +208,22 @@ export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTabl
         </table>
       </div>
 
-      {unattributed > 0 && (
+      {unattributedSales > 0 && (
         <div className="mt-4 px-4 py-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between text-sm">
           <span className="text-yellow-400/80">⚠️ Vendas sem atribuição de criativo (UTM ausente)</span>
-          <span className="text-yellow-400 font-bold text-base">{unattributed}</span>
+          <span className="text-yellow-400 font-bold text-base">{unattributedSales}</span>
+        </div>
+      )}
+      {unattributedLeads > 0 && (
+        <div className="mt-4 px-4 py-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between text-sm">
+          <span className="text-yellow-400/80">⚠️ Leads sem atribuição de criativo (UTM ausente)</span>
+          <span className="text-yellow-400 font-bold text-base">{unattributedLeads}</span>
         </div>
       )}
     </div>
   )
 }
+
 
 
 
