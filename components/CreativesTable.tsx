@@ -199,14 +199,15 @@ export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTabl
         </table>
       </div>
 
-      {isSales && totalSheetSales != null && totalSheetSales > 0 && (() => {
+      {(() => {
+        if (!isSales || !totalSheetSales || totalSheetSales <= 0) return null
         const attributedSales = sorted.reduce((sum, c) => sum + (c.sheetPurchases || 0), 0)
         const unattributed = totalSheetSales - attributedSales
         if (unattributed <= 0) return null
         return (
-          <div className="mt-3 px-2 py-2 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between text-xs text-white/40">
-            <span>Vendas sem atribuição de criativo (UTM ausente)</span>
-            <span className="text-white/60 font-medium">{unattributed}</span>
+          <div className="mt-4 px-4 py-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between text-sm">
+            <span className="text-yellow-400/80">⚠️ Vendas sem atribuição de criativo (UTM ausente)</span>
+            <span className="text-yellow-400 font-bold text-base">{unattributed}</span>
           </div>
         )
       })()}
