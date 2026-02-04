@@ -177,7 +177,7 @@ export default function App() {
                     impressions={metrics.impressions}
                     clicks={metrics.linkClicks}
                     pageViews={metrics.pageViews}
-                    conversions={isSalesProduct ? metrics.sheetSales : metrics.leads}
+                    conversions={isSalesProduct ? metrics.sheetSales : (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads)}
                     conversionLabel={isSalesProduct ? 'Vendas' : 'Leads'}
                   />
                 </div>
@@ -289,5 +289,6 @@ export default function App() {
     </div>
   )
 }
+
 
 
