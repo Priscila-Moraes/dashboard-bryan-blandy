@@ -6,6 +6,7 @@ interface DatePickerProps {
   startDate: string
   endDate: string
   onChange: (range: { start: string; end: string }) => void
+  productId?: string
 }
 
 const PRESETS = [
@@ -162,7 +163,7 @@ function CalendarMonth({ year, month, rangeStart, rangeEnd, hoverDate, onDateCli
   )
 }
 
-export function DatePicker({ startDate, endDate, onChange }: DatePickerProps) {
+export function DatePicker({ startDate, endDate, onChange, productId }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectingStart, setSelectingStart] = useState<string | null>(null)
   const [selectingEnd, setSelectingEnd] = useState<string | null>(null)
@@ -201,7 +202,7 @@ export function DatePicker({ startDate, endDate, onChange }: DatePickerProps) {
   }, [isOpen])
 
   const handlePreset = (presetId: string) => {
-    const range = getDateRange(presetId)
+    const range = getDateRange(presetId, productId)
     onChange(range)
     setIsOpen(false)
   }
@@ -329,3 +330,4 @@ export function DatePicker({ startDate, endDate, onChange }: DatePickerProps) {
     </div>
   )
 }
+
