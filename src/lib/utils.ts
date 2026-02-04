@@ -34,8 +34,17 @@ export function formatDateFull(dateStr: string): string {
   })
 }
 
+// Retorna a data de hoje no fuso de São Paulo (UTC-3)
+function getTodayBRT(): Date {
+  const now = new Date()
+  // Converter para string no fuso de São Paulo e parsear de volta
+  const brtStr = now.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+  // brtStr = "2026-02-03" (formato YYYY-MM-DD)
+  return new Date(brtStr + 'T12:00:00')
+}
+
 export function getDateRange(preset: string): { start: string; end: string } {
-  const today = new Date()
+  const today = getTodayBRT()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
   
@@ -49,21 +58,27 @@ export function getDateRange(preset: string): { start: string; end: string } {
       return { start: formatISO(yesterday), end: formatISO(yesterday) }
     
     case 'last7days': {
-      const start = new Date(today)
+      const end = new Date(today)
+      end.setDate(end.getDate() - 1)
+      const start = new Date(end)
       start.setDate(start.getDate() - 6)
-      return { start: formatISO(start), end: formatISO(today) }
+      return { start: formatISO(start), end: formatISO(end) }
     }
 
     case 'last14days': {
-      const start = new Date(today)
+      const end = new Date(today)
+      end.setDate(end.getDate() - 1)
+      const start = new Date(end)
       start.setDate(start.getDate() - 13)
-      return { start: formatISO(start), end: formatISO(today) }
+      return { start: formatISO(start), end: formatISO(end) }
     }
 
     case 'last30days': {
-      const start = new Date(today)
+      const end = new Date(today)
+      end.setDate(end.getDate() - 1)
+      const start = new Date(end)
       start.setDate(start.getDate() - 29)
-      return { start: formatISO(start), end: formatISO(today) }
+      return { start: formatISO(start), end: formatISO(end) }
     }
     
     case 'thisMonth': {

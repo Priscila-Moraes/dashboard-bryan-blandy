@@ -27,7 +27,7 @@ const PRODUCTS = [
 
 export default function App() {
   const [selectedProduct, setSelectedProduct] = useState('webinarflix')
-  const [dateRange, setDateRange] = useState(() => getDateRange('last7days'))
+  const [dateRange, setDateRange] = useState(() => getDateRange('allTime'))
   const [metrics, setMetrics] = useState<any>(null)
   const [dailyData, setDailyData] = useState<any[]>([])
   const [creatives, setCreatives] = useState<AggregatedCreative[]>([])
