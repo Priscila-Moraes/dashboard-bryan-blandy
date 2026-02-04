@@ -228,4 +228,3 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   result.sort((a, b) => b.spend - a.spend)
   return result
 }
-
