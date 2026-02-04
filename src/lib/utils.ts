@@ -98,7 +98,10 @@ export function getDateRange(preset: string, productId?: string): { start: strin
         'upgrade-persona': '2026-01-23',
         'fib-live': '2026-01-01',
       }
-      return { start: startMap[productId || 'webinarflix'] || '2026-01-20', end: formatISO(today) }
+      const endMap: Record<string, string> = {
+        'upgrade-persona': '2026-02-04',
+      }
+      return { start: startMap[productId || 'webinarflix'] || '2026-01-20', end: endMap[productId || ''] || formatISO(today) }
     }
     
     default:
