@@ -263,6 +263,7 @@ export default function App() {
                 <CreativesTable 
                   data={creatives}
                   isSales={isSalesProduct}
+                  totalSheetSales={metrics.sheetSales}
                 />
               </div>
             </div>

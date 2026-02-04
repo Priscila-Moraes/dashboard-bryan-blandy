@@ -13,9 +13,10 @@ interface SortOption {
 interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
+  totalSheetSales?: number
 }
 
-export function CreativesTable({ data, isSales }: CreativesTableProps) {
+export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('conversions')
 
   if (!data || data.length === 0) {
@@ -197,6 +198,18 @@ export function CreativesTable({ data, isSales }: CreativesTableProps) {
           </tbody>
         </table>
       </div>
+
+      {isSales && totalSheetSales != null && totalSheetSales > 0 && (() => {
+        const attributedSales = sorted.reduce((sum, c) => sum + (c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases), 0)
+        const unattributed = totalSheetSales - attributedSales
+        if (unattributed <= 0) return null
+        return (
+          <div className="mt-3 px-2 py-2 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between text-xs text-white/40">
+            <span>Vendas sem atribuição de criativo (UTM ausente)</span>
+            <span className="text-white/60 font-medium">{unattributed}</span>
+          </div>
+        )
+      })()}
     </div>
   )
 }
