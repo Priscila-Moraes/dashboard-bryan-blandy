@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://lwskyzalynytxtwebbue.supabase.co'
@@ -46,6 +47,7 @@ export interface AdCreative {
   leads: number
   purchases: number
   sheet_purchases: number
+  sheet_leads_utm: number
   cpl: number
   cpa: number
   ctr: number
@@ -62,6 +64,7 @@ export interface AggregatedCreative {
   leads: number
   purchases: number
   sheetPurchases: number
+  sheetLeadsUtm: number
   cpl: number
   cpa: number
   ctr: number
@@ -191,6 +194,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       existing.leads += c.leads || 0
       existing.purchases += c.purchases || 0
       existing.sheetPurchases += c.sheet_purchases || 0
+      existing.sheetLeadsUtm += c.sheet_leads_utm || 0
       if (c.instagram_permalink) {
         existing.instagram_permalink = c.instagram_permalink
       }
@@ -205,6 +209,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         leads: c.leads || 0,
         purchases: c.purchases || 0,
         sheetPurchases: c.sheet_purchases || 0,
+        sheetLeadsUtm: c.sheet_leads_utm || 0,
         cpl: 0,
         cpa: 0,
         ctr: 0,
@@ -217,9 +222,10 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   // Prioriza sheet_purchases (planilha) sobre purchases (Meta)
   const result = Array.from(map.values()).map(c => {
     const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
+    const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
     return {
       ...c,
-      cpl: c.leads > 0 ? c.spend / c.leads : 0,
+      cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
       ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
     }
