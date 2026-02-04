@@ -200,7 +200,7 @@ export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTabl
       </div>
 
       {isSales && totalSheetSales != null && totalSheetSales > 0 && (() => {
-        const attributedSales = sorted.reduce((sum, c) => sum + (c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases), 0)
+        const attributedSales = sorted.reduce((sum, c) => sum + (c.sheetPurchases || 0), 0)
         const unattributed = totalSheetSales - attributedSales
         if (unattributed <= 0) return null
         return (
