@@ -20,6 +20,7 @@ export interface DailySummary {
   total_revenue: number
   sheet_sales: number
   sheet_revenue: number
+  sheet_leads: number
   sheet_mqls: number
   cpm: number
   ctr: number
@@ -109,6 +110,7 @@ export async function getAggregatedMetrics(
       revenue: acc.revenue + (day.total_revenue || 0),
       sheetSales: acc.sheetSales + (day.sheet_sales || 0),
       sheetRevenue: acc.sheetRevenue + (day.sheet_revenue || 0),
+      sheetLeads: acc.sheetLeads + (day.sheet_leads || 0),
       sheetMqls: acc.sheetMqls + (day.sheet_mqls || 0),
     }),
     {
@@ -121,6 +123,7 @@ export async function getAggregatedMetrics(
       revenue: 0,
       sheetSales: 0,
       sheetRevenue: 0,
+      sheetLeads: 0,
       sheetMqls: 0,
     }
   )
@@ -132,7 +135,8 @@ export async function getAggregatedMetrics(
   const roas = totals.spend > 0 ? totals.sheetRevenue / totals.spend : 0
   const loadRate = totals.linkClicks > 0 ? (totals.pageViews / totals.linkClicks) * 100 : 0
   const conversionRate = totals.pageViews > 0 ? (totals.leads / totals.pageViews) * 100 : 0
-  const mqlRate = totals.leads > 0 ? (totals.sheetMqls / totals.leads) * 100 : 0
+  const mqlLeads = totals.sheetLeads > 0 ? totals.sheetLeads : totals.leads
+  const mqlRate = mqlLeads > 0 ? (totals.sheetMqls / mqlLeads) * 100 : 0
 
   return {
     ...totals,

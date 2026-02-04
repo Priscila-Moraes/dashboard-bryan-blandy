@@ -273,7 +273,7 @@ export default function App() {
                 isSales={isSalesProduct}
                 sales={metrics.sheetSales}
                 revenue={metrics.sheetRevenue}
-                leads={metrics.leads}
+                leads={metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads}
                 mqls={metrics.sheetMqls}
                 mqlRate={metrics.mqlRate}
                 cpa={metrics.cpa}
