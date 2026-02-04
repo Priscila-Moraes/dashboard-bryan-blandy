@@ -264,6 +264,7 @@ export default function App() {
                   data={creatives}
                   isSales={isSalesProduct}
                   totalSheetSales={metrics.sheetSales}
+                  totalSheetLeads={metrics.sheetLeads}
                 />
               </div>
             </div>
@@ -288,4 +289,5 @@ export default function App() {
     </div>
   )
 }
+
 
