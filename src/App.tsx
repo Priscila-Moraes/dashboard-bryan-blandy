@@ -114,6 +114,13 @@ export default function App() {
                   </span>
                 )}
               </div>
+              <div className="h-6 w-px bg-white/10 hidden sm:block"></div>
+              <div className="hidden sm:flex items-center gap-2">
+                <svg viewBox="0 0 80 16" className="h-4" fill="none">
+                  <path d="M7.5 2C4.5 2 2.5 4 1.5 6C0.5 8 0 10.5 0 12.5C0 14.5 1 16 3.5 16C5 16 6.5 15 8 12.5L10 9.5L12 12.5C13.5 15 15 16 16.5 16C19 16 20 14.5 20 12.5C20 10.5 19.5 8 18.5 6C17.5 4 15.5 2 12.5 2C10.5 2 8.5 3.5 7 6L10 9.5L7 6C8.5 3.5 10.5 2 12.5 2" stroke="#0081FB" strokeWidth="2.5" fill="none"/>
+                  <text x="24" y="13" fill="#0081FB" fontSize="12" fontWeight="600" fontFamily="Inter, sans-serif">Meta Ads</text>
+                </svg>
+              </div>
             </div>
 
             {/* Filtros */}
