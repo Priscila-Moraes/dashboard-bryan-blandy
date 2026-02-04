@@ -43,7 +43,7 @@ function getTodayBRT(): Date {
   return new Date(brtStr + 'T12:00:00')
 }
 
-export function getDateRange(preset: string): { start: string; end: string } {
+export function getDateRange(preset: string, productId?: string): { start: string; end: string } {
   const today = getTodayBRT()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
@@ -93,7 +93,11 @@ export function getDateRange(preset: string): { start: string; end: string } {
     }
 
     case 'allTime': {
-      return { start: '2026-01-20', end: formatISO(today) }
+      const startMap: Record<string, string> = {
+        'webinarflix': '2026-01-20',
+        'upgrade-persona': '2026-01-23',
+      }
+      return { start: startMap[productId || 'webinarflix'] || '2026-01-20', end: formatISO(today) }
     }
     
     default:

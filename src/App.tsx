@@ -27,7 +27,7 @@ const PRODUCTS = [
 
 export default function App() {
   const [selectedProduct, setSelectedProduct] = useState('webinarflix')
-  const [dateRange, setDateRange] = useState(() => getDateRange('allTime'))
+  const [dateRange, setDateRange] = useState(() => getDateRange('allTime', 'webinarflix'))
   const [metrics, setMetrics] = useState<any>(null)
   const [dailyData, setDailyData] = useState<any[]>([])
   const [creatives, setCreatives] = useState<AggregatedCreative[]>([])
@@ -120,7 +120,11 @@ export default function App() {
               {/* Seletor de Produto */}
               <select
                 value={selectedProduct}
-                onChange={(e) => setSelectedProduct(e.target.value)}
+                onChange={(e) => {
+                  const newProduct = e.target.value
+                  setSelectedProduct(newProduct)
+                  setDateRange(getDateRange('allTime', newProduct))
+                }}
                 className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {PRODUCTS.map((product) => (
