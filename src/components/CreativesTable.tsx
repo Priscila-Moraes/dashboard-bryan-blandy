@@ -13,9 +13,10 @@ interface SortOption {
 interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
+  totalSheetSales?: number
 }
 
-export function CreativesTable({ data, isSales }: CreativesTableProps) {
+export function CreativesTable({ data, isSales, totalSheetSales }: CreativesTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('conversions')
 
   if (!data || data.length === 0) {
@@ -37,8 +38,9 @@ export function CreativesTable({ data, isSales }: CreativesTableProps) {
 
   const getSortValue = (c: AggregatedCreative, key: SortKey): number => {
     const cpc = c.link_clicks > 0 ? c.spend / c.link_clicks : 0
+    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : (c.purchases || 0)
     switch (key) {
-      case 'conversions': return isSales ? (c.purchases || 0) : (c.leads || 0)
+      case 'conversions': return isSales ? realPurchases : (c.leads || 0)
       case 'spend': return c.spend || 0
       case 'clicks': return c.link_clicks || 0
       case 'cpc': return cpc
@@ -120,7 +122,8 @@ export function CreativesTable({ data, isSales }: CreativesTableProps) {
           <tbody className="divide-y divide-white/5">
             {sorted.slice(0, 10).map((creative, index) => {
               const cpc = creative.link_clicks > 0 ? creative.spend / creative.link_clicks : 0
-              const conversions = isSales ? creative.purchases : creative.leads
+              const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases
+              const conversions = isSales ? realPurchases : creative.leads
               const costPerConversion = isSales ? creative.cpa : creative.cpl
 
               return (
@@ -195,7 +198,20 @@ export function CreativesTable({ data, isSales }: CreativesTableProps) {
           </tbody>
         </table>
       </div>
+
+      {isSales && totalSheetSales != null && totalSheetSales > 0 && (() => {
+        const attributedSales = sorted.reduce((sum, c) => sum + (c.sheetPurchases || 0), 0)
+        const unattributed = totalSheetSales - attributedSales
+        if (unattributed <= 0) return null
+        return (
+          <div className="mt-3 px-2 py-2 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between text-xs text-white/40">
+            <span>Vendas sem atribuição de criativo (UTM ausente)</span>
+            <span className="text-white/60 font-medium">{unattributed}</span>
+          </div>
+        )
+      })()}
     </div>
   )
 }
+
 
