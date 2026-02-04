@@ -45,6 +45,7 @@ export interface AdCreative {
   link_clicks: number
   leads: number
   purchases: number
+  sheet_purchases: number
   cpl: number
   cpa: number
   ctr: number
@@ -60,6 +61,7 @@ export interface AggregatedCreative {
   link_clicks: number
   leads: number
   purchases: number
+  sheetPurchases: number
   cpl: number
   cpa: number
   ctr: number
@@ -188,6 +190,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       existing.link_clicks += c.link_clicks || 0
       existing.leads += c.leads || 0
       existing.purchases += c.purchases || 0
+      existing.sheetPurchases += c.sheet_purchases || 0
       if (c.instagram_permalink) {
         existing.instagram_permalink = c.instagram_permalink
       }
@@ -201,6 +204,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         link_clicks: c.link_clicks || 0,
         leads: c.leads || 0,
         purchases: c.purchases || 0,
+        sheetPurchases: c.sheet_purchases || 0,
         cpl: 0,
         cpa: 0,
         ctr: 0,
@@ -210,13 +214,18 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   }
 
   // Recalcular métricas derivadas após agregação
-  const result = Array.from(map.values()).map(c => ({
-    ...c,
-    cpl: c.leads > 0 ? c.spend / c.leads : 0,
-    cpa: c.purchases > 0 ? c.spend / c.purchases : 0,
-    ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
-  }))
+  // Prioriza sheet_purchases (planilha) sobre purchases (Meta)
+  const result = Array.from(map.values()).map(c => {
+    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
+    return {
+      ...c,
+      cpl: c.leads > 0 ? c.spend / c.leads : 0,
+      cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
+      ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
+    }
+  })
 
   result.sort((a, b) => b.spend - a.spend)
   return result
 }
+
