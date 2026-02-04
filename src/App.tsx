@@ -24,6 +24,7 @@ const PRODUCTS = [
   { id: 'webinarflix', name: 'WebinarFlix', type: 'sales' },
   { id: 'upgrade-persona', name: 'Upgrade de Persona', type: 'leads' },
   { id: 'fib-live', name: 'FIB Live', type: 'sales' },
+  { id: 'formulario-aplicacao', name: 'Formulário de Aplicação', type: 'leads' },
 ]
 
 export default function App() {
@@ -124,7 +125,12 @@ export default function App() {
                 onChange={(e) => {
                   const newProduct = e.target.value
                   setSelectedProduct(newProduct)
-                  setDateRange(getDateRange('allTime', newProduct))
+                  // Formulário de Aplicação: abre com dados desde janeiro
+                  if (newProduct === 'formulario-aplicacao') {
+                    setDateRange({ start: '2026-01-01', end: new Date().toISOString().split('T')[0] })
+                  } else {
+                    setDateRange(getDateRange('allTime', newProduct))
+                  }
                 }}
                 className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -140,6 +146,7 @@ export default function App() {
                 startDate={dateRange.start}
                 endDate={dateRange.end}
                 onChange={setDateRange}
+                productId={selectedProduct}
               />
 
               {/* Refresh */}
@@ -289,6 +296,3 @@ export default function App() {
     </div>
   )
 }
-
-
-
