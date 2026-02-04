@@ -37,8 +37,9 @@ export function CreativesTable({ data, isSales }: CreativesTableProps) {
 
   const getSortValue = (c: AggregatedCreative, key: SortKey): number => {
     const cpc = c.link_clicks > 0 ? c.spend / c.link_clicks : 0
+    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : (c.purchases || 0)
     switch (key) {
-      case 'conversions': return isSales ? (c.purchases || 0) : (c.leads || 0)
+      case 'conversions': return isSales ? realPurchases : (c.leads || 0)
       case 'spend': return c.spend || 0
       case 'clicks': return c.link_clicks || 0
       case 'cpc': return cpc
@@ -120,7 +121,8 @@ export function CreativesTable({ data, isSales }: CreativesTableProps) {
           <tbody className="divide-y divide-white/5">
             {sorted.slice(0, 10).map((creative, index) => {
               const cpc = creative.link_clicks > 0 ? creative.spend / creative.link_clicks : 0
-              const conversions = isSales ? creative.purchases : creative.leads
+              const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases
+              const conversions = isSales ? realPurchases : creative.leads
               const costPerConversion = isSales ? creative.cpa : creative.cpl
 
               return (
