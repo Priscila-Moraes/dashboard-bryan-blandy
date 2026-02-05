@@ -38,6 +38,7 @@ export default function App() {
 
   const currentProduct = PRODUCTS.find(p => p.id === selectedProduct)
   const isSalesProduct = currentProduct?.type === 'sales'
+  const isNativeForm = selectedProduct === 'formulario-aplicacao'
 
   async function loadData() {
     setLoading(true)
@@ -186,6 +187,7 @@ export default function App() {
                     pageViews={metrics.pageViews}
                     conversions={isSalesProduct ? metrics.sheetSales : (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads)}
                     conversionLabel={isSalesProduct ? 'Vendas' : 'Leads'}
+                    hidePageViews={isNativeForm}
                   />
                 </div>
 
@@ -209,12 +211,21 @@ export default function App() {
                     icon={<MousePointer className="w-5 h-5" />}
                     color="blue"
                   />
-                  <MetricCard
-                    label="Taxa Carreg."
-                    value={formatPercent(metrics.loadRate)}
-                    icon={<FileText className="w-5 h-5" />}
-                    color="yellow"
-                  />
+                  {isNativeForm ? (
+                    <MetricCard
+                      label="CPC"
+                      value={formatCurrency(metrics.cpc)}
+                      icon={<MousePointer className="w-5 h-5" />}
+                      color="yellow"
+                    />
+                  ) : (
+                    <MetricCard
+                      label="Taxa Carreg."
+                      value={formatPercent(metrics.loadRate)}
+                      icon={<FileText className="w-5 h-5" />}
+                      color="yellow"
+                    />
+                  )}
                   {isSalesProduct ? (
                     <>
                       <MetricCard
@@ -240,7 +251,7 @@ export default function App() {
                       />
                       <MetricCard
                         label="Taxa Conv."
-                        value={formatPercent(metrics.conversionRate)}
+                        value={formatPercent(isNativeForm ? metrics.conversionRateClicks : metrics.conversionRate)}
                         icon={<Percent className="w-5 h-5" />}
                         color="purple"
                       />
