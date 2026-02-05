@@ -136,10 +136,12 @@ export async function getAggregatedMetrics(
   const ctr = totals.impressions > 0 ? (totals.linkClicks / totals.impressions) * 100 : 0
   const realLeads = totals.sheetLeads > 0 ? totals.sheetLeads : totals.leads
   const cpl = realLeads > 0 ? totals.spend / realLeads : 0
+  const cpc = totals.linkClicks > 0 ? totals.spend / totals.linkClicks : 0
   const cpa = totals.sheetSales > 0 ? totals.spend / totals.sheetSales : 0
   const roas = totals.spend > 0 ? totals.sheetRevenue / totals.spend : 0
   const loadRate = totals.linkClicks > 0 ? (totals.pageViews / totals.linkClicks) * 100 : 0
   const conversionRate = totals.pageViews > 0 ? (realLeads / totals.pageViews) * 100 : 0
+  const conversionRateClicks = totals.linkClicks > 0 ? (realLeads / totals.linkClicks) * 100 : 0
   const mqlLeads = totals.sheetLeads > 0 ? totals.sheetLeads : totals.leads
   const mqlRate = mqlLeads > 0 ? (totals.sheetMqls / mqlLeads) * 100 : 0
 
@@ -148,10 +150,12 @@ export async function getAggregatedMetrics(
     cpm,
     ctr,
     cpl,
+    cpc,
     cpa,
     roas,
     loadRate,
     conversionRate,
+    conversionRateClicks,
     mqlRate,
     days: data.length,
     dailyData: data,
@@ -234,3 +238,4 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   result.sort((a, b) => b.spend - a.spend)
   return result
 }
+
