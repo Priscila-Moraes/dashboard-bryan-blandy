@@ -6,18 +6,25 @@ interface FunnelProps {
   pageViews: number
   conversions: number
   conversionLabel: string
+  hidePageViews?: boolean
 }
 
-export function Funnel({ impressions, clicks, pageViews, conversions, conversionLabel }: FunnelProps) {
-  const steps = [
-    { label: 'Impressões', value: impressions, color: 'from-blue-500 to-blue-600' },
-    { label: 'Cliques', value: clicks, color: 'from-cyan-500 to-cyan-600' },
-    { label: 'Page Views', value: pageViews, color: 'from-teal-500 to-teal-600' },
-    { label: conversionLabel, value: conversions, color: 'from-green-500 to-green-600' },
+export function Funnel({ impressions, clicks, pageViews, conversions, conversionLabel, hidePageViews }: FunnelProps) {
+  const allSteps = [
+    { label: 'Impressões', value: impressions, color: 'from-blue-500 to-blue-600', hidden: false },
+    { label: 'Cliques', value: clicks, color: 'from-cyan-500 to-cyan-600', hidden: false },
+    { label: 'Page Views', value: pageViews, color: 'from-teal-500 to-teal-600', hidden: hidePageViews },
+    { label: conversionLabel, value: conversions, color: 'from-green-500 to-green-600', hidden: false },
   ]
 
-  // Fixed progressive widths for clean funnel shape
-  const widthPercents = [100, 70, 55, 40]
+  const steps = allSteps.filter(s => !s.hidden)
+
+  // Progressive widths based on number of steps
+  const widthMap: Record<number, number[]> = {
+    3: [100, 65, 35],
+    4: [100, 70, 55, 40],
+  }
+  const widthPercents = widthMap[steps.length] || widthMap[4]
 
   return (
     <div className="space-y-3">
@@ -57,3 +64,4 @@ export function Funnel({ impressions, clicks, pageViews, conversions, conversion
     </div>
   )
 }
+
