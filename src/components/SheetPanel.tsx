@@ -103,6 +103,17 @@ export function SheetPanel({ isSales, sales, revenue, leads, mqls, mqlRate, cpa,
           </div>
         )}
 
+        {/* Cost per MQL (if mqls > 0) */}
+        {mqls > 0 && spend > 0 && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-white/60">
+              <DollarSign className="w-4 h-4" />
+              <span>Custo/MQL</span>
+            </div>
+            <span className="font-semibold text-white">{formatCurrency(spend / mqls)}</span>
+          </div>
+        )}
+
         {/* MQL Rate */}
         <div>
           <div className="flex items-center justify-between mb-2">

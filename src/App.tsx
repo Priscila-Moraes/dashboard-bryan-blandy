@@ -244,14 +244,14 @@ export default function App() {
                   ) : (
                     <>
                       <MetricCard
-                        label="CPL"
-                        value={formatCurrency(metrics.cpl)}
+                        label="Custo/MQL"
+                        value={metrics.sheetMqls > 0 ? formatCurrency(metrics.spend / metrics.sheetMqls) : '—'}
                         icon={<Users className="w-5 h-5" />}
                         color="green"
                       />
                       <MetricCard
-                        label="Taxa Conv."
-                        value={formatPercent(isNativeForm ? metrics.conversionRateClicks : metrics.conversionRate)}
+                        label="Taxa MQL"
+                        value={formatPercent(metrics.mqlRate)}
                         icon={<Percent className="w-5 h-5" />}
                         color="purple"
                       />
@@ -283,6 +283,7 @@ export default function App() {
                   isSales={isSalesProduct}
                   totalSheetSales={metrics.sheetSales}
                   totalSheetLeads={metrics.sheetLeads}
+                  totalSheetMqls={metrics.sheetMqls}
                 />
               </div>
             </div>

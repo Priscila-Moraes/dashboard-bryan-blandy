@@ -51,6 +51,7 @@ export interface AdCreative {
   purchases: number
   sheet_purchases: number
   sheet_leads_utm: number
+  sheet_mqls?: number
   cpl: number
   cpa: number
   ctr: number
@@ -68,6 +69,7 @@ export interface AggregatedCreative {
   purchases: number
   sheetPurchases: number
   sheetLeadsUtm: number
+  sheetMqls: number
   cpl: number
   cpa: number
   ctr: number
@@ -203,6 +205,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       existing.purchases += c.purchases || 0
       existing.sheetPurchases += c.sheet_purchases || 0
       existing.sheetLeadsUtm += c.sheet_leads_utm || 0
+      existing.sheetMqls += c.sheet_mqls || 0
       if (c.instagram_permalink) {
         existing.instagram_permalink = c.instagram_permalink
       }
@@ -218,6 +221,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         purchases: c.purchases || 0,
         sheetPurchases: c.sheet_purchases || 0,
         sheetLeadsUtm: c.sheet_leads_utm || 0,
+        sheetMqls: c.sheet_mqls || 0,
         cpl: 0,
         cpa: 0,
         ctr: 0,

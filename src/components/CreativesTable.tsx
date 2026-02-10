@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { formatCurrency, formatPercent } from '../lib/utils'
 import { ExternalLink, Trophy, ArrowUpDown } from 'lucide-react'
 import type { AggregatedCreative } from '../lib/supabase'
 
 type SortKey = 'conversions' | 'spend' | 'clicks' | 'cpc' | 'cost_per' | 'ctr'
+type LeadsView = 'leads' | 'mql'
 
 interface SortOption {
   key: SortKey
@@ -15,10 +16,21 @@ interface CreativesTableProps {
   isSales: boolean
   totalSheetSales?: number
   totalSheetLeads?: number
+  totalSheetMqls?: number
 }
 
-export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads }: CreativesTableProps) {
+export function CreativesTable({
+  data,
+  isSales,
+  totalSheetSales,
+  totalSheetLeads,
+  totalSheetMqls,
+}: CreativesTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('conversions')
+  const [leadsView, setLeadsView] = useState<LeadsView>(() => {
+    if (typeof totalSheetMqls === 'number' && totalSheetMqls > 0) return 'mql'
+    return 'leads'
+  })
 
   if (!data || data.length === 0) {
     return (
@@ -28,19 +40,43 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
     )
   }
 
-  // Calcular conversões sem atribuição
-  const attributedSales = data.reduce((sum, c) => sum + (c.sheetPurchases || 0), 0)
-  const unattributedSales = isSales && totalSheetSales ? totalSheetSales - attributedSales : 0
-  const attributedLeads = data.reduce((sum, c) => sum + (c.sheetLeadsUtm || 0), 0)
-  const unattributedLeads = !isSales && totalSheetLeads ? totalSheetLeads - attributedLeads : 0
-  const unattributedConversions = isSales ? unattributedSales : unattributedLeads
+  const viewLabel = isSales ? 'Vendas' : (leadsView === 'mql' ? 'MQLs' : 'Leads')
+
+  // Calcular conversões sem atribuição (diferença entre total da planilha e soma atribuída por ad_id)
+  const totals = useMemo(() => {
+    const attributedSales = data.reduce((sum, c) => sum + (c.sheetPurchases || 0), 0)
+    const attributedLeads = data.reduce((sum, c) => sum + (c.sheetLeadsUtm || 0), 0)
+    const attributedMqls = data.reduce((sum, c) => sum + (c.sheetMqls || 0), 0)
+
+    const unattributedSales =
+      isSales && typeof totalSheetSales === 'number' ? totalSheetSales - attributedSales : 0
+    const unattributedLeads =
+      !isSales && typeof totalSheetLeads === 'number' ? totalSheetLeads - attributedLeads : 0
+    const unattributedMqls =
+      !isSales && typeof totalSheetMqls === 'number' ? totalSheetMqls - attributedMqls : 0
+
+    return {
+      attributedSales,
+      attributedLeads,
+      attributedMqls,
+      unattributedSales,
+      unattributedLeads,
+      unattributedMqls,
+    }
+  }, [data, isSales, totalSheetLeads, totalSheetMqls, totalSheetSales])
+
+  const unattributedConversions = isSales
+    ? totals.unattributedSales
+    : leadsView === 'mql'
+      ? totals.unattributedMqls
+      : totals.unattributedLeads
 
   const sortOptions: SortOption[] = [
-    { key: 'conversions', label: isSales ? 'Vendas' : 'Leads' },
+    { key: 'conversions', label: viewLabel },
     { key: 'spend', label: 'Gasto' },
     { key: 'clicks', label: 'Cliques' },
     { key: 'cpc', label: 'CPC' },
-    { key: 'cost_per', label: isSales ? 'CPA' : 'CPL' },
+    { key: 'cost_per', label: isSales ? 'CPA' : (leadsView === 'mql' ? 'Custo/MQL' : 'CPL') },
     { key: 'ctr', label: 'CTR' },
   ]
 
@@ -48,12 +84,22 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
     const cpc = c.link_clicks > 0 ? c.spend / c.link_clicks : 0
     const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : (c.purchases || 0)
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : (c.leads || 0)
+    const realMqls = c.sheetMqls || 0
+
+    const conversions = isSales ? realPurchases : (leadsView === 'mql' ? realMqls : realLeads)
+    const costPer =
+      isSales
+        ? (c.cpa || 0)
+        : (leadsView === 'mql'
+          ? (conversions > 0 ? c.spend / conversions : 0)
+          : (c.cpl || 0))
+
     switch (key) {
-      case 'conversions': return isSales ? realPurchases : realLeads
+      case 'conversions': return conversions
       case 'spend': return c.spend || 0
       case 'clicks': return c.link_clicks || 0
       case 'cpc': return cpc
-      case 'cost_per': return isSales ? (c.cpa || 0) : (c.cpl || 0)
+      case 'cost_per': return costPer
       case 'ctr': return c.ctr || 0
       default: return 0
     }
@@ -82,6 +128,34 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
 
   return (
     <div>
+      {!isSales && (
+        <div className="flex items-center gap-2 mb-4">
+          <div className="text-xs text-white/40">Visualização:</div>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setLeadsView('leads')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                leadsView === 'leads'
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                  : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70'
+              }`}
+            >
+              Leads
+            </button>
+            <button
+              onClick={() => setLeadsView('mql')}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                leadsView === 'mql'
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/40'
+                  : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70'
+              }`}
+            >
+              MQL
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-4">
         <div className="flex items-center gap-1.5 text-xs text-white/40">
           <ArrowUpDown className="w-3.5 h-3.5" />
@@ -120,8 +194,8 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
                 </>
               ) : (
                 <>
-                  <th className="pb-3 pr-4 text-right">Leads</th>
-                  <th className="pb-3 pr-4 text-right">CPL</th>
+                  <th className="pb-3 pr-4 text-right">{leadsView === 'mql' ? 'MQLs' : 'Leads'}</th>
+                  <th className="pb-3 pr-4 text-right">{leadsView === 'mql' ? 'Custo/MQL' : 'CPL'}</th>
                 </>
               )}
               <th className="pb-3 pr-4 text-right">CTR</th>
@@ -133,8 +207,13 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
               const cpc = creative.link_clicks > 0 ? creative.spend / creative.link_clicks : 0
               const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases
               const realLeads = creative.sheetLeadsUtm > 0 ? creative.sheetLeadsUtm : creative.leads
-              const conversions = isSales ? realPurchases : realLeads
-              const costPerConversion = isSales ? creative.cpa : creative.cpl
+              const realMqls = creative.sheetMqls || 0
+              const conversions = isSales ? realPurchases : (leadsView === 'mql' ? realMqls : realLeads)
+              const costPerConversion = isSales
+                ? creative.cpa
+                : (leadsView === 'mql'
+                  ? (conversions > 0 ? creative.spend / conversions : 0)
+                  : creative.cpl)
 
               return (
                 <tr 
@@ -213,7 +292,9 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
                 </td>
                 <td className="py-3 pr-4">
                   <div className="font-semibold text-yellow-400">
-                    Sem atribuição (UTM ausente)
+                    {isSales
+                      ? 'Sem atribuição (UTM ausente)'
+                      : (leadsView === 'mql' ? 'Sem atribuição (MQL sem match)' : 'Sem atribuição (Lead sem match)')}
                   </div>
                   <div className="text-xs text-white/40">
                     Incluído no total, mas sem ad_id para vincular ao criativo.
@@ -236,6 +317,4 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
     </div>
   )
 }
-
-
 
