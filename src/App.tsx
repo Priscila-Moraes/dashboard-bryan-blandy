@@ -86,7 +86,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="h-screen overflow-y-auto bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="flex items-center gap-3 text-white/60">
           <RefreshCw className="w-5 h-5 animate-spin" />
           <span>Carregando dados...</span>
@@ -96,7 +96,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen overflow-y-auto bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Header */}
       <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
