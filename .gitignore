@@ -1,0 +1,11 @@
+.env
+.env.local
+.env.*.local
+node_modules
+dist
+
+# Local exports / data dumps (do not commit)
+Planilha de Vendas*.csv
+*Sync*.json
+Atualizar Planilha*.json
+Alerta de Erros*.json

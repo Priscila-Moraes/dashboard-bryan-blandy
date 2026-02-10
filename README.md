@@ -34,6 +34,20 @@ npm run dev
 npm run build
 ```
 
+## 🔐 Variáveis de Ambiente
+
+O projeto suporta variáveis de ambiente via Vite:
+
+```bash
+cp .env.example .env
+```
+
+Variáveis usadas:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Observação: hoje existe fallback para os valores atuais no código para evitar quebra durante a migração.
+
 ## 📊 Estrutura
 
 ```
@@ -61,5 +75,4 @@ O dashboard está configurado para usar o Supabase:
 
 ## 📝 Notas
 
-- Atualmente usando dados mockados para demonstração
-- Quando os workflows n8n começarem a salvar dados no Supabase, descomentar o código em `App.tsx` para usar dados reais
+- O dashboard lê dados reais do Supabase (tabelas `daily_summary` e `ad_creatives`)

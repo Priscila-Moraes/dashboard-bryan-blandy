@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://lwskyzalynytxtwebbue.supabase.co'
-const supabaseAnonKey = 'sb_publishable_5rTyenDQRSubpnnIle2C6g_Y2XGNbuA'
+const FALLBACK_SUPABASE_URL = 'https://lwskyzalynytxtwebbue.supabase.co'
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_5rTyenDQRSubpnnIle2C6g_Y2XGNbuA'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || FALLBACK_SUPABASE_URL
+const supabasePublishableKey =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || FALLBACK_SUPABASE_PUBLISHABLE_KEY
+
+export const supabase = createClient(supabaseUrl, supabasePublishableKey)
 
 // Tipos
 export interface DailySummary {
@@ -238,4 +242,3 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   result.sort((a, b) => b.spend - a.spend)
   return result
 }
-

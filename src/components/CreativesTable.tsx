@@ -33,6 +33,7 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
   const unattributedSales = isSales && totalSheetSales ? totalSheetSales - attributedSales : 0
   const attributedLeads = data.reduce((sum, c) => sum + (c.sheetLeadsUtm || 0), 0)
   const unattributedLeads = !isSales && totalSheetLeads ? totalSheetLeads - attributedLeads : 0
+  const unattributedConversions = isSales ? unattributedSales : unattributedLeads
 
   const sortOptions: SortOption[] = [
     { key: 'conversions', label: isSales ? 'Vendas' : 'Leads' },
@@ -204,6 +205,31 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
                 </tr>
               )
             })}
+
+            {unattributedConversions > 0 && (
+              <tr className="bg-yellow-500/5">
+                <td className="py-3 pr-4">
+                  <span className="text-yellow-400 font-semibold">!</span>
+                </td>
+                <td className="py-3 pr-4">
+                  <div className="font-semibold text-yellow-400">
+                    Sem atribuição (UTM ausente)
+                  </div>
+                  <div className="text-xs text-white/40">
+                    Incluído no total, mas sem ad_id para vincular ao criativo.
+                  </div>
+                </td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right">
+                  <span className="text-yellow-400 font-bold">{unattributedConversions}</span>
+                </td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 text-center text-white/30">—</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -223,7 +249,6 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
     </div>
   )
 }
-
 
 
 
