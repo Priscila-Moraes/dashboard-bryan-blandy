@@ -8,12 +8,12 @@ import { MetricCard } from './components/MetricCard'
 import { SheetPanel } from './components/SheetPanel'
 import { CreativesTable } from './components/CreativesTable'
 import { DailyChart } from './components/DailyChart'
-import { 
-  DollarSign, 
-  Eye, 
-  MousePointer, 
-  FileText, 
-  Users, 
+import {
+  DollarSign,
+  Eye,
+  MousePointer,
+  FileText,
+  Users,
   ShoppingCart,
   TrendingUp,
   Percent,
@@ -42,12 +42,12 @@ export default function App() {
 
   async function loadData() {
     setLoading(true)
-    
+
     try {
       // Buscar métricas agregadas do daily_summary
       const data = await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
       setMetrics(data)
-      
+
       // Dados diários para o gráfico
       if (data?.dailyData) {
         setDailyData(data.dailyData)
@@ -64,7 +64,7 @@ export default function App() {
     } catch (err) {
       console.error('Erro ao carregar dados:', err)
     }
-    
+
     setLoading(false)
   }
 
@@ -171,17 +171,17 @@ export default function App() {
           </div>
         ) : (
           <div className="grid grid-cols-12 gap-6">
-            
+
             {/* Left Column - Funnel + Metrics */}
             <div className="col-span-12 lg:col-span-8 xl:col-span-9 space-y-6">
-              
+
               {/* Top Row - Funnel + Key Metrics */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                
+
                 {/* Funnel */}
                 <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                   <h3 className="text-sm font-medium text-white/60 mb-4">Funil de Conversão</h3>
-                  <Funnel 
+                  <Funnel
                     impressions={metrics.impressions}
                     clicks={metrics.linkClicks}
                     pageViews={metrics.pageViews}
@@ -266,8 +266,8 @@ export default function App() {
                   Evolução Diária
                   <span className="text-xs text-white/30 ml-2">({metrics.days} dias)</span>
                 </h3>
-                <DailyChart 
-                  data={dailyData} 
+                <DailyChart
+                  data={dailyData}
                   isSales={isSalesProduct}
                 />
               </div>
@@ -278,7 +278,7 @@ export default function App() {
                   Top Criativos
                   <span className="text-xs text-white/30 ml-2">({creatives.length} criativos)</span>
                 </h3>
-                <CreativesTable 
+                <CreativesTable
                   data={creatives}
                   isSales={isSalesProduct}
                   totalSheetSales={metrics.sheetSales}
