@@ -98,7 +98,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Header */}
-      <header className="border-b border-white/10 bg-white/5 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Logo */}
