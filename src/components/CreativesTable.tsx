@@ -233,23 +233,9 @@ export function CreativesTable({ data, isSales, totalSheetSales, totalSheetLeads
           </tbody>
         </table>
       </div>
-
-      {unattributedSales > 0 && (
-        <div className="mt-4 px-4 py-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between text-sm">
-          <span className="text-yellow-400/80">⚠️ Vendas sem atribuição de criativo (UTM ausente)</span>
-          <span className="text-yellow-400 font-bold text-base">{unattributedSales}</span>
-        </div>
-      )}
-      {unattributedLeads > 0 && (
-        <div className="mt-4 px-4 py-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between text-sm">
-          <span className="text-yellow-400/80">⚠️ Leads sem atribuição de criativo (UTM ausente)</span>
-          <span className="text-yellow-400 font-bold text-base">{unattributedLeads}</span>
-        </div>
-      )}
     </div>
   )
 }
-
 
 
 
