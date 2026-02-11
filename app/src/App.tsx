@@ -347,6 +347,12 @@ export default function App() {
                           : (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads))
                     }
                     conversionLabel={isSalesProduct ? 'Vendas' : (isMqlPrimaryProduct ? 'MQLs' : 'Leads')}
+                    secondaryConversions={
+                      !isSalesProduct && isMqlPrimaryProduct
+                        ? (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads)
+                        : undefined
+                    }
+                    secondaryConversionLabel={!isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined}
                     hidePageViews={isNativeForm}
                   />
                 </div>

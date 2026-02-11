@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAggregatedMetrics, getAdCreatives, aggregateCreatives } from './lib/supabase'
+import { getAggregatedMetrics, getAdCreatives, aggregateCreatives, getLatestDailySummaryDate } from './lib/supabase'
 import type { AggregatedCreative } from './lib/supabase'
 import { formatCurrency, formatNumber, formatPercent, getDateRange } from './lib/utils'
 import { DatePicker } from './components/DatePicker'
@@ -35,30 +35,173 @@ export default function App() {
   const [creatives, setCreatives] = useState<AggregatedCreative[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const [latestAvailableDate, setLatestAvailableDate] = useState<string | null>(null)
+  const [usingCreativesFallback, setUsingCreativesFallback] = useState(false)
 
   const currentProduct = PRODUCTS.find(p => p.id === selectedProduct)
   const isSalesProduct = currentProduct?.type === 'sales'
   const isNativeForm = selectedProduct === 'formulario-aplicacao'
 
+  const todayBRT = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+
   async function loadData() {
     setLoading(true)
 
     try {
-      // Buscar métricas agregadas do daily_summary
-      const data = await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
-      setMetrics(data)
+      setUsingCreativesFallback(false)
 
-      // Dados diários para o gráfico
-      if (data?.dailyData) {
-        setDailyData(data.dailyData)
-      } else {
-        setDailyData([])
-      }
-
-      // Buscar criativos e agregar por ad_id
+      // Buscar criativos e agregar por ad_id (serve como fallback quando daily_summary ainda nao gravou hoje/ontem).
       const rawCreatives = await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
       setCreatives(aggregated)
+
+      // Buscar metricas agregadas do daily_summary
+      const data = await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
+      setLatestAvailableDate(null)
+
+      if (data?.dailyData) {
+        setMetrics(data)
+        setDailyData(data.dailyData)
+      } else if (rawCreatives.length > 0) {
+        // Fallback: se o job do daily_summary nao rodou para hoje/ontem mas os criativos existem,
+        // ainda da para exibir gasto/cliques/leads e a tabela normalmente.
+        setUsingCreativesFallback(true)
+
+        const byDate = new Map<
+          string,
+          {
+            spend: number
+            impressions: number
+            linkClicks: number
+            leads: number
+            purchases: number
+            sheetLeadsUtm: number
+            sheetMqls: number
+          }
+        >()
+
+        for (const c of rawCreatives) {
+          const d = (c.date || '').slice(0, 10)
+          if (!d) continue
+          const cur =
+            byDate.get(d) ||
+            {
+              spend: 0,
+              impressions: 0,
+              linkClicks: 0,
+              leads: 0,
+              purchases: 0,
+              sheetLeadsUtm: 0,
+              sheetMqls: 0,
+            }
+          cur.spend += c.spend || 0
+          cur.impressions += c.impressions || 0
+          cur.linkClicks += c.link_clicks || 0
+          cur.leads += c.leads || 0
+          cur.purchases += c.purchases || 0
+          cur.sheetLeadsUtm += c.sheet_leads_utm || 0
+          cur.sheetMqls += c.sheet_mqls || 0
+          byDate.set(d, cur)
+        }
+
+        const dailyFallback = Array.from(byDate.entries())
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          .map(([date, d]) => {
+            const ctr = d.impressions > 0 ? (d.linkClicks / d.impressions) * 100 : 0
+            const cpm = d.impressions > 0 ? (d.spend / d.impressions) * 1000 : 0
+            const cpl = d.leads > 0 ? d.spend / d.leads : 0
+            const mqlLeads = d.sheetLeadsUtm > 0 ? d.sheetLeadsUtm : d.leads
+            const mqlRate = mqlLeads > 0 ? (d.sheetMqls / mqlLeads) * 100 : 0
+
+            return {
+              // DailySummary shape used by charts
+              date,
+              product_name: selectedProduct,
+              account_id: '',
+              total_spend: d.spend,
+              total_impressions: d.impressions,
+              total_link_clicks: d.linkClicks,
+              total_page_views: 0,
+              total_leads: d.leads,
+              total_purchases: d.purchases,
+              total_revenue: 0,
+              sheet_sales: 0,
+              sheet_revenue: 0,
+              sheet_leads: 0,
+              sheet_mqls: d.sheetMqls,
+              cpm,
+              ctr,
+              cpl,
+              cpa: 0,
+              roas: 0,
+              load_rate: 0,
+              conversion_rate: 0,
+              mql_rate: mqlRate,
+            }
+          })
+
+        const totals = dailyFallback.reduce(
+          (acc, day) => ({
+            spend: acc.spend + (day.total_spend || 0),
+            impressions: acc.impressions + (day.total_impressions || 0),
+            linkClicks: acc.linkClicks + (day.total_link_clicks || 0),
+            pageViews: acc.pageViews + (day.total_page_views || 0),
+            leads: acc.leads + (day.total_leads || 0),
+            purchases: acc.purchases + (day.total_purchases || 0),
+            revenue: acc.revenue + (day.total_revenue || 0),
+            sheetSales: acc.sheetSales + (day.sheet_sales || 0),
+            sheetRevenue: acc.sheetRevenue + (day.sheet_revenue || 0),
+            sheetLeads: acc.sheetLeads + (day.sheet_leads || 0),
+            sheetMqls: acc.sheetMqls + (day.sheet_mqls || 0),
+          }),
+          {
+            spend: 0,
+            impressions: 0,
+            linkClicks: 0,
+            pageViews: 0,
+            leads: 0,
+            purchases: 0,
+            revenue: 0,
+            sheetSales: 0,
+            sheetRevenue: 0,
+            sheetLeads: 0,
+            sheetMqls: 0,
+          }
+        )
+
+        const cpm = totals.impressions > 0 ? (totals.spend / totals.impressions) * 1000 : 0
+        const ctr = totals.impressions > 0 ? (totals.linkClicks / totals.impressions) * 100 : 0
+        const realLeads = totals.leads
+        const cpl = realLeads > 0 ? totals.spend / realLeads : 0
+        const cpc = totals.linkClicks > 0 ? totals.spend / totals.linkClicks : 0
+        const mqlLeads = totals.leads
+        const mqlRate = mqlLeads > 0 ? (totals.sheetMqls / mqlLeads) * 100 : 0
+
+        setMetrics({
+          ...totals,
+          cpm,
+          ctr,
+          cpl,
+          cpc,
+          cpa: 0,
+          roas: 0,
+          loadRate: 0,
+          conversionRate: 0,
+          conversionRateClicks: 0,
+          mqlRate,
+          days: dailyFallback.length,
+          dailyData: dailyFallback,
+        })
+        setDailyData(dailyFallback)
+      } else {
+        // Sem daily_summary e sem criativos no range: de fato nao ha o que renderizar.
+        setMetrics(null)
+        setDailyData([])
+
+        // Ajuda a diagnosticar quando o range esta “vazio” porque o sync ainda nao gravou os dias recentes.
+        const latest = await getLatestDailySummaryDate(selectedProduct)
+        setLatestAvailableDate(latest)
+      }
 
       setLastUpdate(new Date())
     } catch (err) {
@@ -80,9 +223,8 @@ export default function App() {
     return () => clearInterval(interval)
   }, [selectedProduct, dateRange])
 
-  // Verificar se hoje está no range (dados parciais)
-  const today = new Date().toISOString().split('T')[0]
-  const includesPartialDay = dateRange.end >= today
+  // Verificar se hoje está no range (dados parciais) usando fuso de São Paulo
+  const includesPartialDay = dateRange.end >= todayBRT
 
   if (loading) {
     return (
@@ -128,7 +270,7 @@ export default function App() {
                   setSelectedProduct(newProduct)
                   // Formulário de Aplicação: abre com dados desde janeiro
                   if (newProduct === 'formulario-aplicacao') {
-                    setDateRange({ start: '2026-01-01', end: new Date().toISOString().split('T')[0] })
+                    setDateRange({ start: '2026-01-01', end: todayBRT })
                   } else {
                     setDateRange(getDateRange('allTime', newProduct))
                   }
@@ -166,11 +308,21 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto px-6 py-6">
         {!metrics ? (
-          <div className="flex items-center justify-center py-20 text-white/40">
-            Sem dados para o período selecionado
+          <div className="flex flex-col items-center justify-center py-20 text-white/40 text-center gap-2">
+            <div>Sem dados para o período selecionado</div>
+            {latestAvailableDate && (
+              <div className="text-xs text-white/30">
+                Último dia com dados gravados no Supabase para este funil: <span className="text-white/50">{latestAvailableDate}</span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-12 gap-6">
+            {usingCreativesFallback && (
+              <div className="col-span-12 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-sm text-yellow-200/90">
+                Dados de hoje/ontem ainda não foram gravados no <span className="text-yellow-100 font-semibold">daily_summary</span>. Exibindo gasto/cliques/leads a partir de <span className="text-yellow-100 font-semibold">ad_creatives</span> (parcial).
+              </div>
+            )}
 
             {/* Left Column - Funnel + Metrics */}
             <div className="col-span-12 lg:col-span-8 xl:col-span-9 space-y-6">

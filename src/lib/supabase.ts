@@ -98,6 +98,22 @@ export async function getDailySummary(
   return data || []
 }
 
+export async function getLatestDailySummaryDate(productName: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('daily_summary')
+    .select('date')
+    .eq('product_name', productName)
+    .order('date', { ascending: false })
+    .limit(1)
+
+  if (error) {
+    console.error('Error fetching latest daily summary date:', error)
+    return null
+  }
+
+  return data?.[0]?.date || null
+}
+
 export async function getAggregatedMetrics(
   productName: string,
   startDate: string,
