@@ -77,11 +77,15 @@ export function CreativesTable({
     const attributedMqls = data.reduce((sum, c) => sum + (c.sheetMqls || 0), 0)
 
     const unattributedSales =
-      isSales && typeof totalSheetSales === 'number' ? totalSheetSales - attributedSales : 0
+      isSales && typeof totalSheetSales === 'number'
+        ? Math.max(0, totalSheetSales - attributedSales)
+        : 0
     const unattributedLeads =
-      !isSales && typeof totalSheetLeads === 'number' ? totalSheetLeads - attributedLeads : 0
+      !isSales && typeof totalSheetLeads === 'number'
+        ? Math.max(0, totalSheetLeads - attributedLeads)
+        : 0
     const unattributedMqls =
-      !isSales && typeof totalSheetMqls === 'number' ? totalSheetMqls - attributedMqls : 0
+      typeof totalSheetMqls === 'number' ? Math.max(0, totalSheetMqls - attributedMqls) : 0
 
     return {
       attributedSales,
@@ -98,6 +102,10 @@ export function CreativesTable({
     : leadsView === 'mql'
       ? totals.unattributedMqls
       : totals.unattributedLeads
+  const unattributedMqlsInSales = isSales && showMqlInSales ? totals.unattributedMqls : 0
+  const showUnattributedRow = isSales
+    ? totals.unattributedSales > 0 || unattributedMqlsInSales > 0
+    : unattributedConversions > 0
 
   const sortOptions: SortOption[] = [
     { key: 'conversions', label: viewLabel },
@@ -366,7 +374,7 @@ export function CreativesTable({
               )
             })}
 
-            {unattributedConversions > 0 && (
+            {showUnattributedRow && (
               <tr className="bg-yellow-500/5">
                 <td className="py-3 pr-4">
                   <span className="text-yellow-400 font-semibold">!</span>
@@ -385,9 +393,17 @@ export function CreativesTable({
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right">
-                  <span className="text-yellow-400 font-bold">{unattributedConversions}</span>
+                  <span className="text-yellow-400 font-bold">{isSales ? totals.unattributedSales : unattributedConversions}</span>
                 </td>
-                {isSales && showMqlInSales && <td className="py-3 pr-4 text-right text-white/30">—</td>}
+                {isSales && showMqlInSales && (
+                  <td className="py-3 pr-4 text-right">
+                    {unattributedMqlsInSales > 0 ? (
+                      <span className="text-yellow-400 font-bold">{unattributedMqlsInSales}</span>
+                    ) : (
+                      <span className="text-white/30">—</span>
+                    )}
+                  </td>
+                )}
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 {isSales && showMqlInSales && <td className="py-3 pr-4 text-right text-white/30">—</td>}
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
