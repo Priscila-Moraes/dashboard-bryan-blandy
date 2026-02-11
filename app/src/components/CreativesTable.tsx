@@ -173,6 +173,17 @@ export function CreativesTable({
     return vb - va
   })
 
+  const topRows = sorted.slice(0, 10)
+  const visibleMqlInTopRows =
+    isSales && showMqlInSales
+      ? topRows.reduce((sum, creative) => sum + (creative.sheetMqls || 0), 0)
+      : 0
+
+  const otherMqlsNotShown =
+    isSales && showMqlInSales && typeof totalSheetMqls === 'number'
+      ? Math.max(0, totalSheetMqls - visibleMqlInTopRows - unattributedMqlsInSales)
+      : 0
+
   const getMedalColor = (index: number) => {
     switch (index) {
       case 0:
@@ -272,7 +283,7 @@ export function CreativesTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {sorted.slice(0, 10).map((creative, index) => {
+            {topRows.map((creative, index) => {
               const cpc = creative.link_clicks > 0 ? creative.spend / creative.link_clicks : 0
               const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases || 0
               const realLeads = creative.sheetLeadsUtm > 0 ? creative.sheetLeadsUtm : creative.leads || 0
@@ -385,6 +396,31 @@ export function CreativesTable({
                 </tr>
               )
             })}
+
+            {otherMqlsNotShown > 0 && (
+              <tr className="bg-blue-500/5">
+                <td className="py-3 pr-4">
+                  <span className="text-blue-300 font-semibold">i</span>
+                </td>
+                <td className="py-3 pr-4">
+                  <div className="font-semibold text-blue-300">Outros MQLs (nao exibidos no Top 10)</div>
+                  <div className="text-xs text-white/40">Diferenca para fechar o total de MQL do periodo sem listar todos os criativos.</div>
+                </td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                {isSales && showMqlInSales && (
+                  <td className="py-3 pr-4 text-right">
+                    <span className="text-blue-300 font-bold">{otherMqlsNotShown}</span>
+                  </td>
+                )}
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                {isSales && showMqlInSales && <td className="py-3 pr-4 text-right text-white/30">—</td>}
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 text-center text-white/30">—</td>
+              </tr>
+            )}
 
             {showUnattributedRow && (
               <tr className="bg-yellow-500/5">
