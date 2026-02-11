@@ -239,6 +239,7 @@ export function CreativesTable({
                   <th className="pb-3 pr-4 text-right">Vendas</th>
                   {showMqlInSales && <th className="pb-3 pr-4 text-right">MQLs</th>}
                   <th className="pb-3 pr-4 text-right">CPA</th>
+                  {showMqlInSales && <th className="pb-3 pr-4 text-right">Custo/MQL</th>}
                 </>
               ) : (
                 <>
@@ -264,6 +265,7 @@ export function CreativesTable({
                     ? creative.spend / conversions
                     : 0
                   : creative.cpl
+              const costPerMql = realMqls > 0 ? creative.spend / realMqls : 0
               const cplContext = realLeads > 0 ? creative.spend / realLeads : 0
               const displayCreativeName =
                 CREATIVE_NAME_OVERRIDES[String(creative.ad_id || '')] || creative.ad_name
@@ -326,6 +328,25 @@ export function CreativesTable({
                       <span className="text-white/30">—</span>
                     )}
                   </td>
+                  {isSales && showMqlInSales && (
+                    <td className="py-3 pr-4 text-right">
+                      {costPerMql > 0 ? (
+                        <span
+                          className={
+                            costPerMql < 500
+                              ? 'text-green-400'
+                              : costPerMql > 1000
+                                ? 'text-red-400'
+                                : 'text-yellow-400'
+                          }
+                        >
+                          {formatCurrency(costPerMql)}
+                        </span>
+                      ) : (
+                        <span className="text-white/30">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(creative.ctr)}</td>
                   <td className="py-3 text-center">
                     {creativeLink ? (
@@ -368,6 +389,7 @@ export function CreativesTable({
                 </td>
                 {isSales && showMqlInSales && <td className="py-3 pr-4 text-right text-white/30">—</td>}
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
+                {isSales && showMqlInSales && <td className="py-3 pr-4 text-right text-white/30">—</td>}
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 text-center text-white/30">—</td>
               </tr>
