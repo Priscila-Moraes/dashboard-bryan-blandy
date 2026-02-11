@@ -76,7 +76,23 @@ export interface AggregatedCreative {
   instagram_permalink: string
 }
 
+export interface UnattributedMqlLead {
+  date: string
+  product_name?: string
+  client_name?: string
+  lead_name?: string | null
+  name?: string | null
+  nome?: string | null
+  phone?: string | number | null
+  telefone?: string | number | null
+  form_name?: string | null
+  form?: string | null
+  reason?: string | null
+  motivo?: string | null
+}
+
 // Funções de busca
+
 export async function getDailySummary(
   productName: string,
   startDate: string,
@@ -261,4 +277,32 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
 
   result.sort((a, b) => b.spend - a.spend)
   return result
+}
+
+export async function getUnattributedMqlLeads(
+  productName: string,
+  startDate: string,
+  endDate: string,
+  limit = 100
+): Promise<UnattributedMqlLead[]> {
+  const { data, error } = await supabase
+    .from('unattributed_mql_leads')
+    .select('*')
+    .eq('product_name', productName)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    // Tabela ainda nao criada ou sem permissao: nao quebra o dashboard.
+    if ((error as { code?: string }).code === '42P01' || (error as { code?: string }).code === '42501') {
+      return []
+    }
+
+    console.error('Error fetching unattributed mql leads:', error)
+    return []
+  }
+
+  return (data || []) as UnattributedMqlLead[]
 }

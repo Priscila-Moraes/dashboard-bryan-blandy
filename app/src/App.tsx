@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getAggregatedMetrics, getAdCreatives, aggregateCreatives, getLatestDailySummaryDate } from './lib/supabase'
-import type { AggregatedCreative } from './lib/supabase'
+import { getAggregatedMetrics, getAdCreatives, aggregateCreatives, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
+import type { AggregatedCreative, UnattributedMqlLead } from './lib/supabase'
 import { formatCurrency, formatNumber, formatPercent, getDateRange } from './lib/utils'
 import { DatePicker } from './components/DatePicker'
 import { Funnel } from './components/Funnel'
@@ -8,6 +8,7 @@ import { MetricCard } from './components/MetricCard'
 import { SheetPanel } from './components/SheetPanel'
 import { CreativesTable } from './components/CreativesTable'
 import { DailyChart } from './components/DailyChart'
+import { UnattributedLeadsPanel } from './components/UnattributedLeadsPanel'
 import {
   DollarSign,
   Eye,
@@ -38,6 +39,7 @@ export default function App() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [latestAvailableDate, setLatestAvailableDate] = useState<string | null>(null)
   const [usingCreativesFallback, setUsingCreativesFallback] = useState(false)
+  const [unattributedMqlLeads, setUnattributedMqlLeads] = useState<UnattributedMqlLead[]>([])
 
   const currentProduct = PRODUCTS.find(p => p.id === selectedProduct)
   const isSalesProduct = currentProduct?.type === 'sales'
@@ -56,6 +58,18 @@ export default function App() {
       const rawCreatives = await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
       setCreatives(aggregated)
+
+      if (selectedProduct === 'fib-live') {
+        const unattributedLeads = await getUnattributedMqlLeads(
+          selectedProduct,
+          dateRange.start,
+          dateRange.end,
+          100
+        )
+        setUnattributedMqlLeads(unattributedLeads)
+      } else {
+        setUnattributedMqlLeads([])
+      }
 
       // Buscar metricas agregadas do daily_summary
       const data = await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
@@ -476,6 +490,16 @@ export default function App() {
                   totalSheetMqls={metrics.sheetMqls}
                 />
               </div>
+
+              {selectedProduct === 'fib-live' && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                  <h3 className="text-sm font-medium text-white/60 mb-4">
+                    MQLs Sem Atribuicao (Auditoria)
+                    <span className="text-xs text-white/30 ml-2">({unattributedMqlLeads.length} leads)</span>
+                  </h3>
+                  <UnattributedLeadsPanel leads={unattributedMqlLeads} />
+                </div>
+              )}
             </div>
 
             {/* Right Column - Sheet Data */}
