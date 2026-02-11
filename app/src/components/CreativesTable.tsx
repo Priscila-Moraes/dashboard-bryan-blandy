@@ -29,6 +29,7 @@ interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
   isMqlPrimary?: boolean
+  showMqlInSales?: boolean
   totalSheetSales?: number
   totalSheetLeads?: number
   totalSheetMqls?: number
@@ -38,6 +39,7 @@ export function CreativesTable({
   data,
   isSales,
   isMqlPrimary = false,
+  showMqlInSales = false,
   totalSheetSales,
   totalSheetLeads,
   totalSheetMqls,
@@ -235,6 +237,7 @@ export function CreativesTable({
               {isSales ? (
                 <>
                   <th className="pb-3 pr-4 text-right">Vendas</th>
+                  {showMqlInSales && <th className="pb-3 pr-4 text-right">MQLs</th>}
                   <th className="pb-3 pr-4 text-right">CPA</th>
                 </>
               ) : (
@@ -296,6 +299,11 @@ export function CreativesTable({
                       <div className="text-[11px] text-white/35 mt-0.5">{realLeads} leads</div>
                     )}
                   </td>
+                  {isSales && showMqlInSales && (
+                    <td className="py-3 pr-4 text-right">
+                      <span className={realMqls > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{realMqls}</span>
+                    </td>
+                  )}
                   <td className="py-3 pr-4 text-right">
                     {costPerConversion > 0 ? (
                       <>
@@ -358,6 +366,7 @@ export function CreativesTable({
                 <td className="py-3 pr-4 text-right">
                   <span className="text-yellow-400 font-bold">{unattributedConversions}</span>
                 </td>
+                {isSales && showMqlInSales && <td className="py-3 pr-4 text-right text-white/30">—</td>}
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 text-center text-white/30">—</td>

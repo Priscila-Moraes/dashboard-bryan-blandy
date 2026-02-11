@@ -470,6 +470,7 @@ export default function App() {
                   data={creatives}
                   isSales={isSalesProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
+                  showMqlInSales={selectedProduct === 'fib-live'}
                   totalSheetSales={metrics.sheetSales}
                   totalSheetLeads={metrics.sheetLeads}
                   totalSheetMqls={metrics.sheetMqls}
