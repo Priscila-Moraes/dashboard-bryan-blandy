@@ -33,6 +33,7 @@ interface CreativesTableProps {
   totalSheetSales?: number
   totalSheetLeads?: number
   totalSheetMqls?: number
+  unattributedMqlLeadsCount?: number
 }
 
 export function CreativesTable({
@@ -43,6 +44,7 @@ export function CreativesTable({
   totalSheetSales,
   totalSheetLeads,
   totalSheetMqls,
+  unattributedMqlLeadsCount,
 }: CreativesTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('conversions')
   const [leadsView, setLeadsView] = useState<LeadsView>(() => {
@@ -102,7 +104,17 @@ export function CreativesTable({
     : leadsView === 'mql'
       ? totals.unattributedMqls
       : totals.unattributedLeads
-  const unattributedMqlsInSales = isSales && showMqlInSales ? totals.unattributedMqls : 0
+
+  const normalizedUnattributedMqlLeadsCount =
+    typeof unattributedMqlLeadsCount === 'number' ? Math.max(0, unattributedMqlLeadsCount) : undefined
+
+  const unattributedMqlsInSales =
+    isSales && showMqlInSales
+      ? typeof normalizedUnattributedMqlLeadsCount === 'number'
+        ? normalizedUnattributedMqlLeadsCount
+        : totals.unattributedMqls
+      : 0
+
   const showUnattributedRow = isSales
     ? totals.unattributedSales > 0 || unattributedMqlsInSales > 0
     : unattributedConversions > 0

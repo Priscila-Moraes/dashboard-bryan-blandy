@@ -488,6 +488,7 @@ export default function App() {
                   totalSheetSales={metrics.sheetSales}
                   totalSheetLeads={metrics.sheetLeads}
                   totalSheetMqls={metrics.sheetMqls}
+                  unattributedMqlLeadsCount={selectedProduct === 'fib-live' ? unattributedMqlLeads.length : undefined}
                 />
               </div>
 
