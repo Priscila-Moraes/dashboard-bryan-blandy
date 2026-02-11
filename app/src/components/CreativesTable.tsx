@@ -33,7 +33,6 @@ interface CreativesTableProps {
   totalSheetSales?: number
   totalSheetLeads?: number
   totalSheetMqls?: number
-  unattributedMqlLeadsCount?: number
 }
 
 export function CreativesTable({
@@ -44,7 +43,6 @@ export function CreativesTable({
   totalSheetSales,
   totalSheetLeads,
   totalSheetMqls,
-  unattributedMqlLeadsCount,
 }: CreativesTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('conversions')
   const [leadsView, setLeadsView] = useState<LeadsView>(() => {
@@ -105,15 +103,7 @@ export function CreativesTable({
       ? totals.unattributedMqls
       : totals.unattributedLeads
 
-  const normalizedUnattributedMqlLeadsCount =
-    typeof unattributedMqlLeadsCount === 'number' ? Math.max(0, unattributedMqlLeadsCount) : undefined
-
-  const unattributedMqlsInSales =
-    isSales && showMqlInSales
-      ? typeof normalizedUnattributedMqlLeadsCount === 'number'
-        ? normalizedUnattributedMqlLeadsCount
-        : totals.unattributedMqls
-      : 0
+  const unattributedMqlsInSales = isSales && showMqlInSales ? totals.unattributedMqls : 0
 
   const showUnattributedRow = isSales
     ? totals.unattributedSales > 0 || unattributedMqlsInSales > 0
@@ -174,15 +164,6 @@ export function CreativesTable({
   })
 
   const topRows = sorted.slice(0, 10)
-  const visibleMqlInTopRows =
-    isSales && showMqlInSales
-      ? topRows.reduce((sum, creative) => sum + (creative.sheetMqls || 0), 0)
-      : 0
-
-  const otherMqlsNotShown =
-    isSales && showMqlInSales && typeof totalSheetMqls === 'number'
-      ? Math.max(0, totalSheetMqls - visibleMqlInTopRows - unattributedMqlsInSales)
-      : 0
 
   const getMedalColor = (index: number) => {
     switch (index) {
@@ -397,30 +378,6 @@ export function CreativesTable({
               )
             })}
 
-            {otherMqlsNotShown > 0 && (
-              <tr className="bg-blue-500/5">
-                <td className="py-3 pr-4">
-                  <span className="text-blue-300 font-semibold">i</span>
-                </td>
-                <td className="py-3 pr-4">
-                  <div className="font-semibold text-blue-300">Outros MQLs (nao exibidos no Top 10)</div>
-                  <div className="text-xs text-white/40">Diferenca para fechar o total de MQL do periodo sem listar todos os criativos.</div>
-                </td>
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
-                {isSales && showMqlInSales && (
-                  <td className="py-3 pr-4 text-right">
-                    <span className="text-blue-300 font-bold">{otherMqlsNotShown}</span>
-                  </td>
-                )}
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
-                {isSales && showMqlInSales && <td className="py-3 pr-4 text-right text-white/30">—</td>}
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
-                <td className="py-3 text-center text-white/30">—</td>
-              </tr>
-            )}
 
             {showUnattributedRow && (
               <tr className="bg-yellow-500/5">
