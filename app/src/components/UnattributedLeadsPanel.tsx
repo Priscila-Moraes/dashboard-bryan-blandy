@@ -22,6 +22,19 @@ function pickReason(lead: UnattributedMqlLead): string {
   return String(lead.reason || lead.motivo || '').trim()
 }
 
+function formatDateBR(value: string | undefined): string {
+  const s = String(value || '').trim()
+  if (!s) return '-'
+
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`
+
+  const dt = new Date(s)
+  if (isNaN(dt.getTime())) return s
+
+  return dt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+}
+
 export function UnattributedLeadsPanel({ leads }: UnattributedLeadsPanelProps) {
   if (!leads.length) {
     return (
@@ -52,7 +65,7 @@ export function UnattributedLeadsPanel({ leads }: UnattributedLeadsPanelProps) {
           <tbody className="divide-y divide-white/5">
             {leads.map((lead, idx) => (
               <tr key={`${lead.date}-${pickPhone(lead)}-${idx}`} className="hover:bg-white/5 transition-colors">
-                <td className="py-2 pr-3 text-white/80">{lead.date || '-'}</td>
+                <td className="py-2 pr-3 text-white/80">{formatDateBR(lead.date)}</td>
                 <td className="py-2 pr-3 text-white/90">
                   <div className="flex items-center gap-2">
                     <UserRound className="w-3.5 h-3.5 text-white/40" />
