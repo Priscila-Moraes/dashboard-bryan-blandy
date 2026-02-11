@@ -18,7 +18,7 @@ const CREATIVE_LINK_OVERRIDES: Record<string, string> = {
 }
 
 const CREATIVE_NAME_LINK_OVERRIDES: Record<string, string> = {
-  ADS_DOR_DINAMICO_01: 'https://www.instagram.com/p/DUB6KFLAInA/#advertiser',
+  ADS005_VENDA_IMAGEM_FEEDeSTORIES: 'https://www.instagram.com/p/DUB6KFLAInA/#advertiser',
 }
 
 interface CreativesTableProps {
