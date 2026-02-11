@@ -21,6 +21,10 @@ const CREATIVE_NAME_LINK_OVERRIDES: Record<string, string> = {
   ADS005_VENDA_IMAGEM_FEEDeSTORIES: 'https://www.instagram.com/p/DUB6KFLAInA/#advertiser',
 }
 
+const CREATIVE_NAME_OVERRIDES: Record<string, string> = {
+  '120240232224840245': 'ADS005_VENDA_IMAGEM_FEEDeSTORIES',
+}
+
 interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
@@ -258,10 +262,12 @@ export function CreativesTable({
                     : 0
                   : creative.cpl
               const cplContext = realLeads > 0 ? creative.spend / realLeads : 0
+              const displayCreativeName =
+                CREATIVE_NAME_OVERRIDES[String(creative.ad_id || '')] || creative.ad_name
               const creativeLink =
                 creative.instagram_permalink ||
                 CREATIVE_LINK_OVERRIDES[String(creative.ad_id || '')] ||
-                CREATIVE_NAME_LINK_OVERRIDES[String(creative.ad_name || '').trim()] ||
+                CREATIVE_NAME_LINK_OVERRIDES[String(displayCreativeName || '').trim()] ||
                 null
 
               return (
@@ -274,8 +280,8 @@ export function CreativesTable({
                     )}
                   </td>
                   <td className="py-3 pr-4">
-                    <div className="max-w-[200px] truncate font-medium" title={creative.ad_name}>
-                      {creative.ad_name}
+                    <div className="max-w-[200px] truncate font-medium" title={displayCreativeName}>
+                      {displayCreativeName}
                     </div>
                     <div className="text-xs text-white/30 truncate max-w-[200px]" title={creative.campaign_name}>
                       {creative.campaign_name}
