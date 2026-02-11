@@ -17,6 +17,10 @@ const CREATIVE_LINK_OVERRIDES: Record<string, string> = {
   '120240232224840245': 'https://www.instagram.com/p/DUB6KFLAInA/#advertiser',
 }
 
+const CREATIVE_NAME_LINK_OVERRIDES: Record<string, string> = {
+  ADS_DOR_DINAMICO_01: 'https://www.instagram.com/p/DUB6KFLAInA/#advertiser',
+}
+
 interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
@@ -255,7 +259,10 @@ export function CreativesTable({
                   : creative.cpl
               const cplContext = realLeads > 0 ? creative.spend / realLeads : 0
               const creativeLink =
-                creative.instagram_permalink || CREATIVE_LINK_OVERRIDES[String(creative.ad_id || '')] || null
+                creative.instagram_permalink ||
+                CREATIVE_LINK_OVERRIDES[String(creative.ad_id || '')] ||
+                CREATIVE_NAME_LINK_OVERRIDES[String(creative.ad_name || '').trim()] ||
+                null
 
               return (
                 <tr key={creative.ad_id + index} className="hover:bg-white/5 transition-colors">
