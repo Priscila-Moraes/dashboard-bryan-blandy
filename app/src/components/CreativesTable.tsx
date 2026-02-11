@@ -11,6 +11,12 @@ interface SortOption {
   label: string
 }
 
+
+
+const CREATIVE_LINK_OVERRIDES: Record<string, string> = {
+  '120240232224840245': 'https://www.instagram.com/p/DUB6KFLAInA/#advertiser',
+}
+
 interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
@@ -248,6 +254,8 @@ export function CreativesTable({
                     : 0
                   : creative.cpl
               const cplContext = realLeads > 0 ? creative.spend / realLeads : 0
+              const creativeLink =
+                creative.instagram_permalink || CREATIVE_LINK_OVERRIDES[String(creative.ad_id || '')] || null
 
               return (
                 <tr key={creative.ad_id + index} className="hover:bg-white/5 transition-colors">
@@ -299,9 +307,9 @@ export function CreativesTable({
                   </td>
                   <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(creative.ctr)}</td>
                   <td className="py-3 text-center">
-                    {creative.instagram_permalink ? (
+                    {creativeLink ? (
                       <a
-                        href={creative.instagram_permalink}
+                        href={creativeLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
