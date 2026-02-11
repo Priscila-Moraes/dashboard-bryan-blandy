@@ -427,22 +427,6 @@ export default function App() {
       icon={<Percent className="w-5 h-5" />}
       color="purple"
     />
-    <MetricCard
-      label="Leads"
-      value={formatNumber(metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads)}
-      icon={<Users className="w-5 h-5" />}
-      color="blue"
-    />
-    <MetricCard
-      label="CPL"
-      value={
-        (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads) > 0
-          ? formatCurrency(metrics.spend / (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads))
-          : '—'
-      }
-      icon={<DollarSign className="w-5 h-5" />}
-      color="gray"
-    />
   </>
 ) : (
   <>
