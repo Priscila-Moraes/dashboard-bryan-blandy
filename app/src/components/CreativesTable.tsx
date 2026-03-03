@@ -279,16 +279,38 @@ export function CreativesTable({
                   : creative.cpl
               const costPerMql = realMqls > 0 ? creative.spend / realMqls : 0
               const cplContext = realLeads > 0 ? creative.spend / realLeads : 0
+              const groupedAdIds = (creative.grouped_ad_ids || [])
+                .map((id) => String(id || '').trim())
+                .filter(Boolean)
+              if (groupedAdIds.length === 0 && creative.ad_id) {
+                groupedAdIds.push(String(creative.ad_id).trim())
+              }
+              const groupedIdsCount = creative.grouped_ids_count || groupedAdIds.length || 1
+              const hasMultipleIds = groupedIdsCount > 1
               const displayCreativeName =
-                CREATIVE_NAME_OVERRIDES[String(creative.ad_id || '')] || creative.ad_name
+                groupedAdIds
+                  .map((id) => CREATIVE_NAME_OVERRIDES[id])
+                  .find(Boolean) ||
+                CREATIVE_NAME_OVERRIDES[String(creative.ad_id || '')] ||
+                creative.ad_name
+              const creativeLinkOverrideById = groupedAdIds
+                .map((id) => CREATIVE_LINK_OVERRIDES[id])
+                .find(Boolean)
               const creativeLink =
                 creative.instagram_permalink ||
+                creativeLinkOverrideById ||
                 CREATIVE_LINK_OVERRIDES[String(creative.ad_id || '')] ||
                 CREATIVE_NAME_LINK_OVERRIDES[String(displayCreativeName || '').trim()] ||
                 null
+              const groupedIdsTooltip = hasMultipleIds
+                ? `Consolidado de ${groupedIdsCount} IDs: ${groupedAdIds.join(', ')}`
+                : ''
 
               return (
-                <tr key={creative.ad_id + index} className="hover:bg-white/5 transition-colors">
+                <tr
+                  key={`${displayCreativeName}-${groupedAdIds[0] || creative.ad_id || index}`}
+                  className="hover:bg-white/5 transition-colors"
+                >
                   <td className="py-3 pr-4">
                     {index < 3 ? (
                       <Trophy className={`w-4 h-4 ${getMedalColor(index)}`} />
@@ -297,8 +319,18 @@ export function CreativesTable({
                     )}
                   </td>
                   <td className="py-3 pr-4">
-                    <div className="max-w-[200px] truncate font-medium" title={displayCreativeName}>
-                      {displayCreativeName}
+                    <div className="flex items-center gap-2 max-w-[250px]">
+                      <div className="truncate font-medium" title={displayCreativeName}>
+                        {displayCreativeName}
+                      </div>
+                      {hasMultipleIds && (
+                        <span
+                          className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/15 text-amber-300 uppercase tracking-wide"
+                          title={groupedIdsTooltip}
+                        >
+                          {groupedIdsCount} IDs
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-white/30 truncate max-w-[200px]" title={creative.campaign_name}>
                       {creative.campaign_name}

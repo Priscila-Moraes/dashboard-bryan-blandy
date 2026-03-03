@@ -54,7 +54,7 @@ export default function App() {
     try {
       setUsingCreativesFallback(false)
 
-      // Buscar criativos e agregar por ad_id (serve como fallback quando daily_summary ainda nao gravou hoje/ontem).
+      // Buscar criativos e agregar por ad_name (fallback ad_id) para evitar duplicidade visual.
       const rawCreatives = await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
       setCreatives(aggregated)

@@ -61,6 +61,8 @@ export interface AdCreative {
 export interface AggregatedCreative {
   ad_name: string
   ad_id: string
+  grouped_ad_ids: string[]
+  grouped_ids_count: number
   campaign_name: string
   spend: number
   impressions: number
@@ -221,12 +223,13 @@ export async function getAdCreatives(
   return data || []
 }
 
-// Agregar criativos por ad_id (soma spend/impressions/clicks de múltiplos dias)
+// Agregar criativos por ad_name (fallback ad_id) para evitar duplicidade visual por IDs recriados
 export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[] {
   const map = new Map<string, AggregatedCreative>()
 
   for (const c of creatives) {
-    const key = c.ad_id || c.ad_name
+    const key = (c.ad_name || c.ad_id || '').trim()
+    const currentAdId = (c.ad_id || '').trim()
     const existing = map.get(key)
 
     if (existing) {
@@ -238,13 +241,23 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       existing.sheetPurchases += c.sheet_purchases || 0
       existing.sheetLeadsUtm += c.sheet_leads_utm || 0
       existing.sheetMqls += c.sheet_mqls || 0
+      if (currentAdId && !existing.grouped_ad_ids.includes(currentAdId)) {
+        existing.grouped_ad_ids.push(currentAdId)
+        existing.grouped_ids_count = existing.grouped_ad_ids.length
+      }
+      if (!existing.ad_id && currentAdId) {
+        existing.ad_id = currentAdId
+      }
       if (c.instagram_permalink) {
         existing.instagram_permalink = c.instagram_permalink
       }
     } else {
+      const groupedAdIds = currentAdId ? [currentAdId] : []
       map.set(key, {
         ad_name: c.ad_name,
-        ad_id: c.ad_id,
+        ad_id: currentAdId,
+        grouped_ad_ids: groupedAdIds,
+        grouped_ids_count: groupedAdIds.length,
         campaign_name: c.campaign_name,
         spend: c.spend || 0,
         impressions: c.impressions || 0,
