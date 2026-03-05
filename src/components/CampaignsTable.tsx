@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { ArrowUpDown, Trophy } from 'lucide-react'
+import { ArrowUpDown } from 'lucide-react'
 import { formatCurrency, formatPercent } from '../lib/utils'
 import type { AggregatedCampaign } from '../lib/supabase'
 
-type SortKey = 'conversions' | 'spend' | 'clicks' | 'cpc' | 'cost_per' | 'ctr'
+type SortKey = 'conversions' | 'spend' | 'clicks' | 'cpc' | 'load_rate' | 'cost_per' | 'ctr'
 
 interface SortOption {
   key: SortKey
@@ -30,6 +30,7 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
     { key: 'spend', label: 'Gasto' },
     { key: 'conversions', label: conversionLabel },
     { key: 'clicks', label: 'Cliques' },
+    { key: 'load_rate', label: 'Taxa Carreg.' },
     { key: 'cpc', label: 'CPC' },
     { key: 'cost_per', label: costLabel },
     { key: 'ctr', label: 'CTR' },
@@ -54,6 +55,8 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
         return campaign.spend || 0
       case 'clicks':
         return campaign.link_clicks || 0
+      case 'load_rate':
+        return campaign.load_rate || 0
       case 'cpc':
         return campaign.cpc || 0
       case 'cost_per':
@@ -78,19 +81,6 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
   })
 
   const topRows = sorted.slice(0, 10)
-
-  const getMedalColor = (index: number) => {
-    switch (index) {
-      case 0:
-        return 'text-yellow-400'
-      case 1:
-        return 'text-gray-300'
-      case 2:
-        return 'text-amber-600'
-      default:
-        return 'text-white/40'
-    }
-  }
 
   return (
     <div>
@@ -124,6 +114,7 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
               <th className="pb-3 pr-4">Campanha</th>
               <th className="pb-3 pr-4 text-right">Gasto</th>
               <th className="pb-3 pr-4 text-right">Cliques</th>
+              <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>
               <th className="pb-3 pr-4 text-right">CPC</th>
               <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
               <th className="pb-3 pr-4 text-right">{costLabel}</th>
@@ -137,13 +128,7 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
 
               return (
                 <tr key={`${campaign.campaign_name}-${index}`} className="hover:bg-white/5 transition-colors">
-                  <td className="py-3 pr-4">
-                    {index < 3 ? (
-                      <Trophy className={`w-4 h-4 ${getMedalColor(index)}`} />
-                    ) : (
-                      <span className="text-white/40">{index + 1}</span>
-                    )}
-                  </td>
+                  <td className="py-3 pr-4 text-white/50">{index + 1}</td>
                   <td className="py-3 pr-4">
                     <div className="truncate max-w-[360px] font-medium" title={campaign.campaign_name}>
                       {campaign.campaign_name}
@@ -151,6 +136,7 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.spend)}</td>
                   <td className="py-3 pr-4 text-right text-white/80">{campaign.link_clicks}</td>
+                  <td className="py-3 pr-4 text-right text-cyan-300">{formatPercent(campaign.load_rate)}</td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.cpc)}</td>
                   <td className="py-3 pr-4 text-right">
                     <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>

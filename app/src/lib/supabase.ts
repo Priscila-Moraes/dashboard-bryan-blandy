@@ -89,6 +89,7 @@ export interface AggregatedCampaign {
   sheetLeadsUtm: number
   sheetMqls: number
   cpc: number
+  load_rate: number
   cpl: number
   cpa: number
   ctr: number
@@ -338,6 +339,7 @@ export function aggregateCampaigns(creatives: AdCreative[]): AggregatedCampaign[
       sheetLeadsUtm: c.sheet_leads_utm || 0,
       sheetMqls: c.sheet_mqls || 0,
       cpc: 0,
+      load_rate: 0,
       cpl: 0,
       cpa: 0,
       ctr: 0,
@@ -351,6 +353,7 @@ export function aggregateCampaigns(creatives: AdCreative[]): AggregatedCampaign[
     return {
       ...c,
       cpc: c.link_clicks > 0 ? c.spend / c.link_clicks : 0,
+      load_rate: c.link_clicks > 0 ? (realLeads / c.link_clicks) * 100 : 0,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
       ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
