@@ -89,7 +89,7 @@ export interface AggregatedCampaign {
   sheetLeadsUtm: number
   sheetMqls: number
   cpc: number
-  load_rate: number
+  load_rate: number | null
   cpl: number
   cpa: number
   ctr: number
@@ -309,12 +309,21 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   return result
 }
 
-export function aggregateCampaigns(creatives: AdCreative[]): AggregatedCampaign[] {
+export function aggregateCampaigns(
+  creatives: AdCreative[],
+  dailyData: DailySummary[] = []
+): AggregatedCampaign[] {
   const map = new Map<string, AggregatedCampaign>()
+  const clicksByCampaignDate = new Map<string, number>()
 
   for (const c of creatives) {
     const key = (c.campaign_name || '').trim() || '(sem campanha)'
     const existing = map.get(key)
+    const dateKey = `${key}__${(c.date || '').slice(0, 10)}`
+    clicksByCampaignDate.set(
+      dateKey,
+      (clicksByCampaignDate.get(dateKey) || 0) + (c.link_clicks || 0)
+    )
 
     if (existing) {
       existing.spend += c.spend || 0
@@ -339,21 +348,48 @@ export function aggregateCampaigns(creatives: AdCreative[]): AggregatedCampaign[
       sheetLeadsUtm: c.sheet_leads_utm || 0,
       sheetMqls: c.sheet_mqls || 0,
       cpc: 0,
-      load_rate: 0,
+      load_rate: null,
       cpl: 0,
       cpa: 0,
       ctr: 0,
     })
   }
 
+  const ratioByDate = new Map<string, number>()
+  let globalPv = 0
+  let globalClicks = 0
+  for (const day of dailyData) {
+    const d = (day.date || '').slice(0, 10)
+    if (!d) continue
+    const clicks = Number(day.total_link_clicks || 0)
+    const pageViews = Number(day.total_page_views || 0)
+    if (clicks > 0) {
+      ratioByDate.set(d, pageViews / clicks)
+      globalPv += pageViews
+      globalClicks += clicks
+    }
+  }
+  const globalRatio = globalClicks > 0 ? globalPv / globalClicks : null
+
   const result = Array.from(map.values()).map((c) => {
     const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
+    let estimatedPv = 0
+    let clicksWithRatio = 0
+
+    for (const [key, clicks] of clicksByCampaignDate.entries()) {
+      if (!key.startsWith(`${c.campaign_name}__`)) continue
+      const date = key.split('__')[1]
+      const ratio = ratioByDate.get(date) ?? globalRatio
+      if (ratio === null || ratio === undefined) continue
+      estimatedPv += clicks * ratio
+      clicksWithRatio += clicks
+    }
 
     return {
       ...c,
       cpc: c.link_clicks > 0 ? c.spend / c.link_clicks : 0,
-      load_rate: c.link_clicks > 0 ? (realLeads / c.link_clicks) * 100 : 0,
+      load_rate: clicksWithRatio > 0 ? (estimatedPv / clicksWithRatio) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
       ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,

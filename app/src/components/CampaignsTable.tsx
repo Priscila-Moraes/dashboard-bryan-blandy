@@ -136,7 +136,13 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.spend)}</td>
                   <td className="py-3 pr-4 text-right text-white/80">{campaign.link_clicks}</td>
-                  <td className="py-3 pr-4 text-right text-cyan-300">{formatPercent(campaign.load_rate)}</td>
+                  <td className="py-3 pr-4 text-right">
+                    {campaign.load_rate !== null ? (
+                      <span className="text-cyan-300">{formatPercent(campaign.load_rate)}</span>
+                    ) : (
+                      <span className="text-white/30">—</span>
+                    )}
+                  </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.cpc)}</td>
                   <td className="py-3 pr-4 text-right">
                     <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>

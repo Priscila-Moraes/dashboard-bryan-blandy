@@ -60,8 +60,6 @@ export default function App() {
       // Buscar criativos e agregar por ad_name (fallback ad_id) para evitar duplicidade visual.
       const rawCreatives = await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
-      const aggregatedByCampaign = aggregateCampaigns(rawCreatives)
-      setCampaigns(aggregatedByCampaign)
       setCreatives(aggregated)
 
       if (selectedProduct === 'fib-live') {
@@ -81,9 +79,11 @@ export default function App() {
       setLatestAvailableDate(null)
 
       if (data?.dailyData) {
+        setCampaigns(aggregateCampaigns(rawCreatives, data.dailyData))
         setMetrics(data)
         setDailyData(data.dailyData)
       } else if (rawCreatives.length > 0) {
+        setCampaigns(aggregateCampaigns(rawCreatives))
         // Fallback: se o job do daily_summary nao rodou para hoje/ontem mas os criativos existem,
         // ainda da para exibir gasto/cliques/leads e a tabela normalmente.
         setUsingCreativesFallback(true)
@@ -215,6 +215,7 @@ export default function App() {
         })
         setDailyData(dailyFallback)
       } else {
+        setCampaigns([])
         // Sem daily_summary e sem criativos no range: de fato nao ha o que renderizar.
         setMetrics(null)
         setDailyData([])
