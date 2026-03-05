@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { getAggregatedMetrics, getAdCreatives, aggregateCreatives, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
-import type { AggregatedCreative, UnattributedMqlLead } from './lib/supabase'
+import { getAggregatedMetrics, getAdCreatives, aggregateCreatives, aggregateCampaigns, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
+import type { AggregatedCreative, AggregatedCampaign, UnattributedMqlLead } from './lib/supabase'
 import { formatCurrency, formatNumber, formatPercent, getDateRange } from './lib/utils'
 import { DatePicker } from './components/DatePicker'
 import { Funnel } from './components/Funnel'
 import { MetricCard } from './components/MetricCard'
 import { SheetPanel } from './components/SheetPanel'
+import { CampaignsTable } from './components/CampaignsTable'
 import { CreativesTable } from './components/CreativesTable'
 import { DailyChart } from './components/DailyChart'
 import { UnattributedLeadsPanel } from './components/UnattributedLeadsPanel'
@@ -35,6 +36,7 @@ export default function App() {
   const [dateRange, setDateRange] = useState(() => getDateRange('allTime', 'webinarflix'))
   const [metrics, setMetrics] = useState<any>(null)
   const [dailyData, setDailyData] = useState<any[]>([])
+  const [campaigns, setCampaigns] = useState<AggregatedCampaign[]>([])
   const [creatives, setCreatives] = useState<AggregatedCreative[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
@@ -58,6 +60,8 @@ export default function App() {
       // Buscar criativos e agregar por ad_name (fallback ad_id) para evitar duplicidade visual.
       const rawCreatives = await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
+      const aggregatedByCampaign = aggregateCampaigns(rawCreatives)
+      setCampaigns(aggregatedByCampaign)
       setCreatives(aggregated)
 
       if (selectedProduct === 'fib-live') {
@@ -476,6 +480,18 @@ export default function App() {
               </div>
 
               {/* Creatives Table */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                <h3 className="text-sm font-medium text-white/60 mb-4">
+                  Campanhas
+                  <span className="text-xs text-white/30 ml-2">({campaigns.length} campanhas)</span>
+                </h3>
+                <CampaignsTable
+                  data={campaigns}
+                  isSales={isSalesProduct}
+                  isMqlPrimary={isMqlPrimaryProduct}
+                />
+              </div>
+
               <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                 <h3 className="text-sm font-medium text-white/60 mb-4">
                   Top Criativos

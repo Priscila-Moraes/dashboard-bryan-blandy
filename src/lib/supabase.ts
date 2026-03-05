@@ -76,6 +76,22 @@ export interface AggregatedCreative {
   instagram_permalink: string
 }
 
+export interface AggregatedCampaign {
+  campaign_name: string
+  spend: number
+  impressions: number
+  link_clicks: number
+  leads: number
+  purchases: number
+  sheetPurchases: number
+  sheetLeadsUtm: number
+  sheetMqls: number
+  cpc: number
+  cpl: number
+  cpa: number
+  ctr: number
+}
+
 // Funções de busca
 export async function getDailySummary(
   productName: string,
@@ -253,6 +269,59 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
     return {
       ...c,
+      cpl: realLeads > 0 ? c.spend / realLeads : 0,
+      cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
+      ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
+    }
+  })
+
+  result.sort((a, b) => b.spend - a.spend)
+  return result
+}
+
+export function aggregateCampaigns(creatives: AdCreative[]): AggregatedCampaign[] {
+  const map = new Map<string, AggregatedCampaign>()
+
+  for (const c of creatives) {
+    const key = (c.campaign_name || '').trim() || '(sem campanha)'
+    const existing = map.get(key)
+
+    if (existing) {
+      existing.spend += c.spend || 0
+      existing.impressions += c.impressions || 0
+      existing.link_clicks += c.link_clicks || 0
+      existing.leads += c.leads || 0
+      existing.purchases += c.purchases || 0
+      existing.sheetPurchases += c.sheet_purchases || 0
+      existing.sheetLeadsUtm += c.sheet_leads_utm || 0
+      existing.sheetMqls += c.sheet_mqls || 0
+      continue
+    }
+
+    map.set(key, {
+      campaign_name: key,
+      spend: c.spend || 0,
+      impressions: c.impressions || 0,
+      link_clicks: c.link_clicks || 0,
+      leads: c.leads || 0,
+      purchases: c.purchases || 0,
+      sheetPurchases: c.sheet_purchases || 0,
+      sheetLeadsUtm: c.sheet_leads_utm || 0,
+      sheetMqls: c.sheet_mqls || 0,
+      cpc: 0,
+      cpl: 0,
+      cpa: 0,
+      ctr: 0,
+    })
+  }
+
+  const result = Array.from(map.values()).map((c) => {
+    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
+    const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
+
+    return {
+      ...c,
+      cpc: c.link_clicks > 0 ? c.spend / c.link_clicks : 0,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
       ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
