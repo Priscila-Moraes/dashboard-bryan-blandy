@@ -22,7 +22,7 @@ import {
 
 const PRODUCTS = [
   { id: 'webinarflix', name: 'WebinarFlix', type: 'sales' },
-  { id: 'workshop-lancamento-simultaneo', name: 'Workshop Lançamento Simultâneo', type: 'sales' },
+  { id: 'workshop-lancamento-simultaneo', name: 'Workshop Lançamento Simultaneo', type: 'sales' },
   { id: 'upgrade-persona', name: 'Upgrade de Persona', type: 'leads' },
   { id: 'fib-live', name: 'FIB Live', type: 'sales' },
   { id: 'formulario-aplicacao', name: 'Formulário de Aplicação', type: 'leads' },
