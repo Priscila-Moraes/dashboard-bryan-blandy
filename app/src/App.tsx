@@ -79,7 +79,7 @@ export default function App() {
       setLatestAvailableDate(null)
 
       if (data?.dailyData) {
-        setCampaigns(aggregateCampaigns(rawCreatives, data.dailyData))
+        setCampaigns(aggregateCampaigns(rawCreatives))
         setMetrics(data)
         setDailyData(data.dailyData)
       } else if (rawCreatives.length > 0) {

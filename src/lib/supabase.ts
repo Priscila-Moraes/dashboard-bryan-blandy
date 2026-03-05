@@ -47,6 +47,7 @@ export interface AdCreative {
   spend: number
   impressions: number
   link_clicks: number
+  page_views?: number
   leads: number
   purchases: number
   sheet_purchases: number
@@ -81,6 +82,8 @@ export interface AggregatedCampaign {
   spend: number
   impressions: number
   link_clicks: number
+  page_views: number
+  has_page_views: boolean
   leads: number
   purchases: number
   sheetPurchases: number
@@ -281,25 +284,22 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
 }
 
 export function aggregateCampaigns(
-  creatives: AdCreative[],
-  dailyData: DailySummary[] = []
+  creatives: AdCreative[]
 ): AggregatedCampaign[] {
   const map = new Map<string, AggregatedCampaign>()
-  const clicksByCampaignDate = new Map<string, number>()
 
   for (const c of creatives) {
     const key = (c.campaign_name || '').trim() || '(sem campanha)'
     const existing = map.get(key)
-    const dateKey = `${key}__${(c.date || '').slice(0, 10)}`
-    clicksByCampaignDate.set(
-      dateKey,
-      (clicksByCampaignDate.get(dateKey) || 0) + (c.link_clicks || 0)
-    )
 
     if (existing) {
       existing.spend += c.spend || 0
       existing.impressions += c.impressions || 0
       existing.link_clicks += c.link_clicks || 0
+      if (typeof c.page_views === 'number') {
+        existing.page_views += c.page_views || 0
+        existing.has_page_views = true
+      }
       existing.leads += c.leads || 0
       existing.purchases += c.purchases || 0
       existing.sheetPurchases += c.sheet_purchases || 0
@@ -313,6 +313,8 @@ export function aggregateCampaigns(
       spend: c.spend || 0,
       impressions: c.impressions || 0,
       link_clicks: c.link_clicks || 0,
+      page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
+      has_page_views: typeof c.page_views === 'number',
       leads: c.leads || 0,
       purchases: c.purchases || 0,
       sheetPurchases: c.sheet_purchases || 0,
@@ -326,41 +328,14 @@ export function aggregateCampaigns(
     })
   }
 
-  const ratioByDate = new Map<string, number>()
-  let globalPv = 0
-  let globalClicks = 0
-  for (const day of dailyData) {
-    const d = (day.date || '').slice(0, 10)
-    if (!d) continue
-    const clicks = Number(day.total_link_clicks || 0)
-    const pageViews = Number(day.total_page_views || 0)
-    if (clicks > 0) {
-      ratioByDate.set(d, pageViews / clicks)
-      globalPv += pageViews
-      globalClicks += clicks
-    }
-  }
-  const globalRatio = globalClicks > 0 ? globalPv / globalClicks : null
-
   const result = Array.from(map.values()).map((c) => {
     const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
-    let estimatedPv = 0
-    let clicksWithRatio = 0
-
-    for (const [key, clicks] of clicksByCampaignDate.entries()) {
-      if (!key.startsWith(`${c.campaign_name}__`)) continue
-      const date = key.split('__')[1]
-      const ratio = ratioByDate.get(date) ?? globalRatio
-      if (ratio === null || ratio === undefined) continue
-      estimatedPv += clicks * ratio
-      clicksWithRatio += clicks
-    }
 
     return {
       ...c,
       cpc: c.link_clicks > 0 ? c.spend / c.link_clicks : 0,
-      load_rate: clicksWithRatio > 0 ? (estimatedPv / clicksWithRatio) * 100 : null,
+      load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
       ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
