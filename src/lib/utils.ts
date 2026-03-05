@@ -95,6 +95,7 @@ export function getDateRange(preset: string, productId?: string): { start: strin
     case 'allTime': {
       const startMap: Record<string, string> = {
         'webinarflix': '2026-01-20',
+        'workshop-lancamento-simultaneo': '2026-03-04',
         'upgrade-persona': '2026-01-23',
         'fib-live': '2026-01-01',
         'formulario-aplicacao': '2025-10-08',
@@ -109,4 +110,3 @@ export function getDateRange(preset: string, productId?: string): { start: strin
       return { start: formatISO(yesterday), end: formatISO(yesterday) }
   }
 }
-
