@@ -64,15 +64,20 @@ export interface AggregatedCreative {
   ad_id: string
   grouped_ad_ids: string[]
   grouped_ids_count: number
+  grouped_names: string[]
+  grouped_names_count: number
   campaign_name: string
   spend: number
   impressions: number
   link_clicks: number
+  page_views: number
+  has_page_views: boolean
   leads: number
   purchases: number
   sheetPurchases: number
   sheetLeadsUtm: number
   sheetMqls: number
+  load_rate: number | null
   cpl: number
   cpa: number
   ctr: number
@@ -243,19 +248,35 @@ export async function getAdCreatives(
   return data || []
 }
 
-// Agregar criativos por ad_name (fallback ad_id) para evitar duplicidade visual por IDs recriados
+function normalizeCreativeGroupKey(adName: string | null | undefined): string {
+  return String(adName || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\s*[_-]\s*/g, '_')
+    .replace(/_+/g, '_')
+}
+
+// Agregar criativos por ad_name normalizado (fallback ad_id) para evitar duplicidade visual.
 export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[] {
   const map = new Map<string, AggregatedCreative>()
 
   for (const c of creatives) {
-    const key = (c.ad_name || c.ad_id || '').trim()
+    const currentAdName = String(c.ad_name || '').trim()
     const currentAdId = (c.ad_id || '').trim()
+    const key = normalizeCreativeGroupKey(currentAdName) || currentAdId
     const existing = map.get(key)
 
     if (existing) {
       existing.spend += c.spend || 0
       existing.impressions += c.impressions || 0
       existing.link_clicks += c.link_clicks || 0
+      if (typeof c.page_views === 'number') {
+        existing.page_views += c.page_views || 0
+        existing.has_page_views = true
+      }
       existing.leads += c.leads || 0
       existing.purchases += c.purchases || 0
       existing.sheetPurchases += c.sheet_purchases || 0
@@ -265,28 +286,41 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         existing.grouped_ad_ids.push(currentAdId)
         existing.grouped_ids_count = existing.grouped_ad_ids.length
       }
+      if (currentAdName && !existing.grouped_names.includes(currentAdName)) {
+        existing.grouped_names.push(currentAdName)
+        existing.grouped_names_count = existing.grouped_names.length
+      }
       if (!existing.ad_id && currentAdId) {
         existing.ad_id = currentAdId
+      }
+      if (!existing.ad_name && currentAdName) {
+        existing.ad_name = currentAdName
       }
       if (c.instagram_permalink) {
         existing.instagram_permalink = c.instagram_permalink
       }
     } else {
       const groupedAdIds = currentAdId ? [currentAdId] : []
+      const groupedNames = currentAdName ? [currentAdName] : []
       map.set(key, {
-        ad_name: c.ad_name,
+        ad_name: currentAdName,
         ad_id: currentAdId,
         grouped_ad_ids: groupedAdIds,
         grouped_ids_count: groupedAdIds.length,
+        grouped_names: groupedNames,
+        grouped_names_count: groupedNames.length,
         campaign_name: c.campaign_name,
         spend: c.spend || 0,
         impressions: c.impressions || 0,
         link_clicks: c.link_clicks || 0,
+        page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
+        has_page_views: typeof c.page_views === 'number',
         leads: c.leads || 0,
         purchases: c.purchases || 0,
         sheetPurchases: c.sheet_purchases || 0,
         sheetLeadsUtm: c.sheet_leads_utm || 0,
         sheetMqls: c.sheet_mqls || 0,
+        load_rate: null,
         cpl: 0,
         cpa: 0,
         ctr: 0,
@@ -302,6 +336,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
     return {
       ...c,
+      load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
       ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
