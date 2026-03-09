@@ -503,6 +503,7 @@ export default function App() {
                   isSales={isSalesProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
                   showMqlInSales={selectedProduct === 'fib-live'}
+                  showDeliveryMetrics={selectedProduct === 'workshop-lancamento-simultaneo'}
                   totalSheetSales={metrics.sheetSales}
                   totalSheetLeads={metrics.sheetLeads}
                   totalSheetMqls={metrics.sheetMqls}

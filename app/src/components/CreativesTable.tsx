@@ -30,6 +30,7 @@ interface CreativesTableProps {
   isSales: boolean
   isMqlPrimary?: boolean
   showMqlInSales?: boolean
+  showDeliveryMetrics?: boolean
   totalSheetSales?: number
   totalSheetLeads?: number
   totalSheetMqls?: number
@@ -40,6 +41,7 @@ export function CreativesTable({
   isSales,
   isMqlPrimary = false,
   showMqlInSales = false,
+  showDeliveryMetrics = false,
   totalSheetSales,
   totalSheetLeads,
   totalSheetMqls,
@@ -112,9 +114,13 @@ export function CreativesTable({
   const sortOptions: SortOption[] = [
     { key: 'conversions', label: viewLabel },
     { key: 'spend', label: 'Gasto' },
-    { key: 'impressions', label: 'Impressões' },
+    ...(showDeliveryMetrics
+      ? [
+          { key: 'impressions' as const, label: 'Impressões' },
+          { key: 'load_rate' as const, label: 'Taxa Carreg.' },
+        ]
+      : []),
     { key: 'clicks', label: 'Cliques' },
-    { key: 'load_rate', label: 'Taxa Carreg.' },
     { key: 'cpc', label: 'CPC' },
     { key: 'cost_per', label: isSales ? 'CPA' : leadsView === 'mql' ? 'Custo/MQL' : 'CPL' },
     { key: 'ctr', label: 'CTR' },
@@ -250,9 +256,9 @@ export function CreativesTable({
               <th className="pb-3 pr-4">#</th>
               <th className="pb-3 pr-4">Criativo</th>
               <th className="pb-3 pr-4 text-right">Gasto</th>
-              <th className="pb-3 pr-4 text-right">Impressões</th>
+              {showDeliveryMetrics && <th className="pb-3 pr-4 text-right">Impressões</th>}
               <th className="pb-3 pr-4 text-right">Cliques</th>
-              <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>
+              {showDeliveryMetrics && <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>}
               <th className="pb-3 pr-4 text-right">CPC</th>
               {isSales ? (
                 <>
@@ -373,15 +379,19 @@ export function CreativesTable({
                     </div>
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(creative.spend)}</td>
-                  <td className="py-3 pr-4 text-right text-white/80">{creative.impressions.toLocaleString('pt-BR')}</td>
+                  {showDeliveryMetrics && (
+                    <td className="py-3 pr-4 text-right text-white/80">{creative.impressions.toLocaleString('pt-BR')}</td>
+                  )}
                   <td className="py-3 pr-4 text-right text-white/80">{creative.link_clicks}</td>
-                  <td className="py-3 pr-4 text-right">
-                    {creative.load_rate !== null ? (
-                      <span className="text-cyan-300">{formatPercent(creative.load_rate)}</span>
-                    ) : (
-                      <span className="text-white/30">—</span>
-                    )}
-                  </td>
+                  {showDeliveryMetrics && (
+                    <td className="py-3 pr-4 text-right">
+                      {creative.load_rate !== null ? (
+                        <span className="text-cyan-300">{formatPercent(creative.load_rate)}</span>
+                      ) : (
+                        <span className="text-white/30">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(cpc)}</td>
                   <td className="py-3 pr-4 text-right">
                     <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
@@ -472,8 +482,8 @@ export function CreativesTable({
                 </td>
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
-                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                {showDeliveryMetrics && <td className="py-3 pr-4 text-right text-white/30">—</td>}
+                {showDeliveryMetrics && <td className="py-3 pr-4 text-right text-white/30">—</td>}
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right">
                   <span className="text-yellow-400 font-bold">{isSales ? totals.unattributedSales : unattributedConversions}</span>
