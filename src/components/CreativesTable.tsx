@@ -3,7 +3,7 @@ import { formatCurrency, formatPercent } from '../lib/utils'
 import { ExternalLink, Trophy, ArrowUpDown } from 'lucide-react'
 import type { AggregatedCreative } from '../lib/supabase'
 
-type SortKey = 'conversions' | 'spend' | 'clicks' | 'cpc' | 'cost_per' | 'ctr'
+type SortKey = 'conversions' | 'spend' | 'impressions' | 'clicks' | 'load_rate' | 'cpc' | 'cost_per' | 'ctr'
 type LeadsView = 'leads' | 'mql'
 
 interface SortOption {
@@ -74,7 +74,9 @@ export function CreativesTable({
   const sortOptions: SortOption[] = [
     { key: 'conversions', label: viewLabel },
     { key: 'spend', label: 'Gasto' },
+    { key: 'impressions', label: 'Impressões' },
     { key: 'clicks', label: 'Cliques' },
+    { key: 'load_rate', label: 'Taxa Carreg.' },
     { key: 'cpc', label: 'CPC' },
     { key: 'cost_per', label: isSales ? 'CPA' : (leadsView === 'mql' ? 'Custo/MQL' : 'CPL') },
     { key: 'ctr', label: 'CTR' },
@@ -97,7 +99,9 @@ export function CreativesTable({
     switch (key) {
       case 'conversions': return conversions
       case 'spend': return c.spend || 0
+      case 'impressions': return c.impressions || 0
       case 'clicks': return c.link_clicks || 0
+      case 'load_rate': return c.load_rate || 0
       case 'cpc': return cpc
       case 'cost_per': return costPer
       case 'ctr': return c.ctr || 0
@@ -185,7 +189,9 @@ export function CreativesTable({
               <th className="pb-3 pr-4">#</th>
               <th className="pb-3 pr-4">Criativo</th>
               <th className="pb-3 pr-4 text-right">Gasto</th>
+              <th className="pb-3 pr-4 text-right">Impressões</th>
               <th className="pb-3 pr-4 text-right">Cliques</th>
+              <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>
               <th className="pb-3 pr-4 text-right">CPC</th>
               {isSales ? (
                 <>
@@ -214,10 +220,34 @@ export function CreativesTable({
                 : (leadsView === 'mql'
                   ? (conversions > 0 ? creative.spend / conversions : 0)
                   : creative.cpl)
+              const groupedAdIds = (creative.grouped_ad_ids || [])
+                .map((id) => String(id || '').trim())
+                .filter(Boolean)
+              if (groupedAdIds.length === 0 && creative.ad_id) {
+                groupedAdIds.push(String(creative.ad_id).trim())
+              }
+              const groupedIdsCount = creative.grouped_ids_count || groupedAdIds.length || 1
+              const hasMultipleIds = groupedIdsCount > 1
+              const groupedNames = (creative.grouped_names || [])
+                .map((name) => String(name || '').trim())
+                .filter(Boolean)
+              const groupedNamesCount = creative.grouped_names_count || groupedNames.length || 1
+              const hasMultipleNames = groupedNamesCount > 1
+              const groupedIdsTooltip = hasMultipleIds
+                ? `Consolidado de ${groupedIdsCount} IDs: ${groupedAdIds.join(', ')}`
+                : ''
+              const groupedNamesTooltip = hasMultipleNames
+                ? `Mesmo criativo com ${groupedNamesCount} variações de nome: ${groupedNames.join(' | ')}`
+                : ''
+              const primaryAdId = groupedAdIds[0] || creative.ad_id || ''
+              const shortPrimaryAdId =
+                primaryAdId.length > 10
+                  ? `${primaryAdId.slice(0, 6)}...${primaryAdId.slice(-4)}`
+                  : primaryAdId
 
               return (
                 <tr 
-                  key={creative.ad_id + index} 
+                  key={`${creative.ad_name}-${primaryAdId || index}`}
                   className="hover:bg-white/5 transition-colors"
                 >
                   <td className="py-3 pr-4">
@@ -228,8 +258,33 @@ export function CreativesTable({
                     )}
                   </td>
                   <td className="py-3 pr-4">
-                    <div className="max-w-[200px] truncate font-medium" title={creative.ad_name}>
-                      {creative.ad_name}
+                    <div className="max-w-[250px]">
+                      <div className="font-medium leading-snug break-words" title={creative.ad_name}>
+                        {creative.ad_name}
+                      </div>
+                      {shortPrimaryAdId && (
+                        <div className="text-[11px] text-white/35 mt-1" title={primaryAdId}>
+                          ID {shortPrimaryAdId}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      {hasMultipleIds && (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/15 text-amber-300 uppercase tracking-wide"
+                          title={groupedIdsTooltip}
+                        >
+                          {groupedIdsCount} IDs
+                        </span>
+                      )}
+                      {hasMultipleNames && (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-full border border-sky-500/40 bg-sky-500/15 text-sky-300 uppercase tracking-wide"
+                          title={groupedNamesTooltip}
+                        >
+                          {groupedNamesCount} nomes
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-white/30 truncate max-w-[200px]" title={creative.campaign_name}>
                       {creative.campaign_name}
@@ -239,7 +294,17 @@ export function CreativesTable({
                     {formatCurrency(creative.spend)}
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">
+                    {creative.impressions.toLocaleString('pt-BR')}
+                  </td>
+                  <td className="py-3 pr-4 text-right text-white/80">
                     {creative.link_clicks}
+                  </td>
+                  <td className="py-3 pr-4 text-right">
+                    {creative.load_rate !== null ? (
+                      <span className="text-cyan-300">{formatPercent(creative.load_rate)}</span>
+                    ) : (
+                      <span className="text-white/30">—</span>
+                    )}
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">
                     {formatCurrency(cpc)}
@@ -303,6 +368,8 @@ export function CreativesTable({
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
+                <td className="py-3 pr-4 text-right text-white/30">—</td>
                 <td className="py-3 pr-4 text-right">
                   <span className="text-yellow-400 font-bold">{unattributedConversions}</span>
                 </td>
@@ -317,4 +384,3 @@ export function CreativesTable({
     </div>
   )
 }
-
