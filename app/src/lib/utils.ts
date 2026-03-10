@@ -99,6 +99,7 @@ export function getDateRange(preset: string, productId?: string): { start: strin
         'upgrade-persona': '2026-01-23',
         'fib-live': '2026-01-01',
         'formulario-aplicacao': '2025-10-08',
+        'engajamento-video-view': '2026-03-09',
       }
       const endMap: Record<string, string> = {
         'upgrade-persona': '2026-02-04',

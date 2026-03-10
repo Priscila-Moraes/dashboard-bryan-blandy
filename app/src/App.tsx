@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAggregatedMetrics, getAdCreatives, aggregateCreatives, aggregateCampaigns, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
+import { getAggregatedMetrics, getAdCreatives, getAdCreativesByCampaignPatterns, aggregateCreatives, aggregateCampaigns, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
 import type { AggregatedCreative, AggregatedCampaign, UnattributedMqlLead } from './lib/supabase'
 import { formatCurrency, formatNumber, formatPercent, getDateRange } from './lib/utils'
 import { DatePicker } from './components/DatePicker'
@@ -29,7 +29,12 @@ const PRODUCTS = [
   { id: 'upgrade-persona', name: 'Upgrade de Persona', type: 'leads' },
   { id: 'fib-live', name: 'FIB Live', type: 'sales' },
   { id: 'formulario-aplicacao', name: 'Formulário de Aplicação', type: 'leads' },
+  { id: 'engajamento-video-view', name: 'Engajamento Video View', type: 'leads' },
 ]
+
+const CAMPAIGN_PATTERN_BY_PRODUCT: Record<string, string[]> = {
+  'engajamento-video-view': ['vv_engajamento_mar26_abo'],
+}
 
 export default function App() {
   const [selectedProduct, setSelectedProduct] = useState('webinarflix')
@@ -48,6 +53,8 @@ export default function App() {
   const isSalesProduct = currentProduct?.type === 'sales'
   const isNativeForm = selectedProduct === 'formulario-aplicacao'
   const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedProduct)
+  const campaignPatterns = CAMPAIGN_PATTERN_BY_PRODUCT[selectedProduct] || []
+  const usesCampaignPattern = campaignPatterns.length > 0
 
   const todayBRT = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
 
@@ -58,7 +65,9 @@ export default function App() {
       setUsingCreativesFallback(false)
 
       // Buscar criativos e agregar por ad_name (fallback ad_id) para evitar duplicidade visual.
-      const rawCreatives = await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
+      const rawCreatives = usesCampaignPattern
+        ? await getAdCreativesByCampaignPatterns(dateRange.start, dateRange.end, campaignPatterns)
+        : await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
       setCreatives(aggregated)
 
@@ -75,7 +84,9 @@ export default function App() {
       }
 
       // Buscar metricas agregadas do daily_summary
-      const data = await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
+      const data = usesCampaignPattern
+        ? null
+        : await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
       setLatestAvailableDate(null)
 
       if (data?.dailyData) {
@@ -221,7 +232,7 @@ export default function App() {
         setDailyData([])
 
         // Ajuda a diagnosticar quando o range esta “vazio” porque o sync ainda nao gravou os dias recentes.
-        const latest = await getLatestDailySummaryDate(selectedProduct)
+        const latest = usesCampaignPattern ? null : await getLatestDailySummaryDate(selectedProduct)
         setLatestAvailableDate(latest)
       }
 

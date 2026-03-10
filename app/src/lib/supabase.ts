@@ -248,6 +248,37 @@ export async function getAdCreatives(
   return data || []
 }
 
+export async function getAdCreativesByCampaignPatterns(
+  startDate: string,
+  endDate: string,
+  patterns: string[]
+): Promise<AdCreative[]> {
+  const normalizedPatterns = Array.from(new Set(patterns.map((pattern) => pattern.trim()).filter(Boolean)))
+
+  if (normalizedPatterns.length === 0) {
+    return []
+  }
+
+  const orFilter = normalizedPatterns
+    .map((pattern) => `campaign_name.ilike.*${pattern.replace(/,/g, '')}*`)
+    .join(',')
+
+  const { data, error } = await supabase
+    .from('ad_creatives')
+    .select('*')
+    .or(orFilter)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('spend', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching ad creatives by campaign patterns:', error)
+    return []
+  }
+
+  return data || []
+}
+
 function normalizeCreativeGroupKey(adName: string | null | undefined): string {
   return String(adName || '')
     .normalize('NFD')
