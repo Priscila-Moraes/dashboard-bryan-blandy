@@ -434,6 +434,11 @@ export default function App() {
                     secondaryConversionLabel={
                       isVideoViewProduct ? '50% do video' : !isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined
                     }
+                    extraSteps={
+                      isVideoViewProduct
+                        ? [{ label: '95% do video', value: metrics.video95Pct }]
+                        : undefined
+                    }
                     hidePageViews={isNativeForm}
                   />
                 </div>

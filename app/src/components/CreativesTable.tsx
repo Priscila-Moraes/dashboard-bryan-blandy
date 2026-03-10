@@ -16,11 +16,15 @@ type SortKey =
   | 'video_50_pct'
   | 'video_75_pct'
   | 'video_95_pct'
+  | 'hook_rate'
+  | 'hold_rate'
+  | 'completion_rate'
 type LeadsView = 'leads' | 'mql'
 
 interface SortOption {
   key: SortKey
   label: string
+  title?: string
 }
 
 
@@ -144,6 +148,9 @@ export function CreativesTable({
         { key: 'video_50_pct', label: '50%' },
         { key: 'video_75_pct', label: '75%' },
         { key: 'cost_per', label: 'Custo/TP' },
+        { key: 'hook_rate', label: 'Hook Rate', title: '3s Views / Impressões' },
+        { key: 'hold_rate', label: 'Hold Rate', title: 'ThruPlays / 3s Views' },
+        { key: 'completion_rate', label: 'Completion Rate', title: '95% do vídeo / Impressões' },
       ]
     : [
         { key: 'conversions', label: viewLabel },
@@ -165,6 +172,9 @@ export function CreativesTable({
     const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases || 0
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads || 0
     const realMqls = c.sheetMqls || 0
+    const hookRate = c.impressions > 0 ? ((c.video_3s_views || 0) / c.impressions) * 100 : 0
+    const holdRate = (c.video_3s_views || 0) > 0 ? ((c.thruplays || 0) / (c.video_3s_views || 0)) * 100 : 0
+    const completionRate = c.impressions > 0 ? ((c.video_95_pct || 0) / c.impressions) * 100 : 0
 
     const conversions = isVideoView ? c.thruplays || 0 : isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
     const costPer = isVideoView
@@ -204,6 +214,12 @@ export function CreativesTable({
         return c.video_75_pct || 0
       case 'video_95_pct':
         return c.video_95_pct || 0
+      case 'hook_rate':
+        return hookRate
+      case 'hold_rate':
+        return holdRate
+      case 'completion_rate':
+        return completionRate
       default:
         return 0
     }
@@ -283,6 +299,7 @@ export function CreativesTable({
             <button
               key={opt.key}
               onClick={() => setSortBy(opt.key)}
+              title={opt.title}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 sortBy === opt.key
                   ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
@@ -312,6 +329,9 @@ export function CreativesTable({
                   <th className="pb-3 pr-4 text-right">Custo/TP</th>
                   <th className="pb-3 pr-4 text-right">50%</th>
                   <th className="pb-3 pr-4 text-right">75%</th>
+                  <th className="pb-3 pr-4 text-right" title="3s Views / Impressões">Hook Rate</th>
+                  <th className="pb-3 pr-4 text-right" title="ThruPlays / 3s Views">Hold Rate</th>
+                  <th className="pb-3 pr-4 text-right" title="95% do vídeo / Impressões">Completion Rate</th>
                 </>
               ) : isSales ? (
                 <>
@@ -336,6 +356,9 @@ export function CreativesTable({
               const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases || 0
               const realLeads = creative.sheetLeadsUtm > 0 ? creative.sheetLeadsUtm : creative.leads || 0
               const realMqls = creative.sheetMqls || 0
+              const hookRate = creative.impressions > 0 ? ((creative.video_3s_views || 0) / creative.impressions) * 100 : 0
+              const holdRate = (creative.video_3s_views || 0) > 0 ? ((creative.thruplays || 0) / (creative.video_3s_views || 0)) * 100 : 0
+              const completionRate = creative.impressions > 0 ? ((creative.video_95_pct || 0) / creative.impressions) * 100 : 0
               const conversions = isVideoView ? creative.thruplays || 0 : isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
               const costPerConversion = isVideoView
                 ? conversions > 0
@@ -471,6 +494,9 @@ export function CreativesTable({
                       </td>
                       <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_50_pct || 0)}</td>
                       <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_75_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-cyan-300">{formatPercent(hookRate)}</td>
+                      <td className="py-3 pr-4 text-right text-green-300">{formatPercent(holdRate)}</td>
+                      <td className="py-3 pr-4 text-right text-purple-300">{formatPercent(completionRate)}</td>
                     </>
                   ) : (
                     <>

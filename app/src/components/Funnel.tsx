@@ -10,6 +10,7 @@ interface FunnelProps {
   pageViewsLabel?: string
   secondaryConversions?: number
   secondaryConversionLabel?: string
+  extraSteps?: Array<{ label: string; value: number }>
   hidePageViews?: boolean
 }
 
@@ -23,6 +24,7 @@ export function Funnel({
   pageViewsLabel,
   secondaryConversions,
   secondaryConversionLabel,
+  extraSteps,
   hidePageViews,
 }: FunnelProps) {
   const showSecondary =
@@ -44,21 +46,27 @@ export function Funnel({
   ]
 
   const steps = allSteps.filter((s) => !s.hidden)
+  const appendedSteps = (extraSteps || []).map((step, index) => ({
+    ...step,
+    color: index === 0 ? 'from-lime-500 to-lime-600' : 'from-emerald-500 to-emerald-600',
+  }))
+  const finalSteps = [...steps, ...appendedSteps]
 
   // Progressive widths based on number of steps
   const widthMap: Record<number, number[]> = {
     3: [100, 65, 35],
     4: [100, 72, 54, 40],
     5: [100, 80, 66, 52, 40],
+    6: [100, 86, 74, 62, 50, 40],
   }
-  const widthPercents = widthMap[steps.length] || widthMap[4]
+  const widthPercents = widthMap[finalSteps.length] || widthMap[4]
 
   return (
     <div className="space-y-3">
-      {steps.map((step, index) => {
+      {finalSteps.map((step, index) => {
         const rate =
-          index > 0 && steps[index - 1].value > 0
-            ? ((step.value / steps[index - 1].value) * 100).toFixed(1) + '%'
+          index > 0 && finalSteps[index - 1].value > 0
+            ? ((step.value / finalSteps[index - 1].value) * 100).toFixed(1) + '%'
             : null
 
         return (

@@ -91,7 +91,7 @@ export function SheetPanel({
           <div className="text-sm font-medium text-white/60">Qualidade do Criativo</div>
 
           <div className="flex items-center justify-between">
-            <div>
+            <div title="3s Views / Impressões">
               <div className="text-xs text-white/45 uppercase tracking-wide">Hook Rate</div>
               <div className="text-[11px] text-white/35">3s Views / Impressões</div>
             </div>
@@ -99,7 +99,7 @@ export function SheetPanel({
           </div>
 
           <div className="flex items-center justify-between">
-            <div>
+            <div title="ThruPlays / 3s Views">
               <div className="text-xs text-white/45 uppercase tracking-wide">Hold Rate</div>
               <div className="text-[11px] text-white/35">ThruPlays / 3s Views</div>
             </div>
@@ -107,7 +107,7 @@ export function SheetPanel({
           </div>
 
           <div className="flex items-center justify-between">
-            <div>
+            <div title="95% do vídeo / Impressões">
               <div className="text-xs text-white/45 uppercase tracking-wide">Completion Rate</div>
               <div className="text-[11px] text-white/35">95% / Impressões</div>
             </div>
