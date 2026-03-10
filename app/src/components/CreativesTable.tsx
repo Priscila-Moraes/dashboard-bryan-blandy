@@ -8,7 +8,7 @@ import {
   formatNumber,
   formatPercent,
 } from '../lib/utils'
-import { ExternalLink, Trophy, ArrowUpDown } from 'lucide-react'
+import { CircleHelp, ExternalLink, Trophy, ArrowUpDown } from 'lucide-react'
 import type { AggregatedCreative } from '../lib/supabase'
 
 type SortKey =
@@ -34,6 +34,12 @@ interface SortOption {
   label: string
   title?: string
 }
+
+const VIDEO_METRIC_HELP = {
+  hook_rate: '% de pessoas que pararam o scroll e assistiram pelo menos 3 segundos do vídeo.',
+  hold_rate: '% de pessoas que continuaram assistindo o vídeo após os primeiros segundos.',
+  completion_rate: '% de pessoas que assistiram o vídeo quase até o final.',
+} as const
 
 
 
@@ -160,9 +166,9 @@ export function CreativesTable({
         { key: 'video_50_pct', label: '50%' },
         { key: 'video_75_pct', label: '75%' },
         { key: 'cost_per', label: 'Custo/TP' },
-        { key: 'hook_rate', label: 'Hook Rate', title: '3s Views / Impressões' },
-        { key: 'hold_rate', label: 'Hold Rate', title: 'ThruPlays / 3s Views' },
-        { key: 'completion_rate', label: 'Completion Rate', title: '95% do vídeo / Impressões' },
+        { key: 'hook_rate', label: 'Hook Rate', title: VIDEO_METRIC_HELP.hook_rate },
+        { key: 'hold_rate', label: 'Hold Rate', title: VIDEO_METRIC_HELP.hold_rate },
+        { key: 'completion_rate', label: 'Completion Rate', title: VIDEO_METRIC_HELP.completion_rate },
       ]
     : [
         { key: 'conversions', label: viewLabel },
@@ -366,9 +372,24 @@ export function CreativesTable({
                   <th className="pb-3 pr-4 text-right">Custo/TP</th>
                   <th className="pb-3 pr-4 text-right">50%</th>
                   <th className="pb-3 pr-4 text-right">75%</th>
-                  <th className="pb-3 pr-4 text-right" title="3s Views / Impressões">Hook Rate</th>
-                  <th className="pb-3 pr-4 text-right" title="ThruPlays / 3s Views">Hold Rate</th>
-                  <th className="pb-3 pr-4 text-right" title="95% do vídeo / Impressões">Completion Rate</th>
+                  <th className="pb-3 pr-4 text-right">
+                    <span className="inline-flex items-center justify-end gap-1" title={VIDEO_METRIC_HELP.hook_rate}>
+                      Hook Rate
+                      <CircleHelp className="h-3.5 w-3.5 text-white/35" aria-label={VIDEO_METRIC_HELP.hook_rate} />
+                    </span>
+                  </th>
+                  <th className="pb-3 pr-4 text-right">
+                    <span className="inline-flex items-center justify-end gap-1" title={VIDEO_METRIC_HELP.hold_rate}>
+                      Hold Rate
+                      <CircleHelp className="h-3.5 w-3.5 text-white/35" aria-label={VIDEO_METRIC_HELP.hold_rate} />
+                    </span>
+                  </th>
+                  <th className="pb-3 pr-4 text-right">
+                    <span className="inline-flex items-center justify-end gap-1" title={VIDEO_METRIC_HELP.completion_rate}>
+                      Completion Rate
+                      <CircleHelp className="h-3.5 w-3.5 text-white/35" aria-label={VIDEO_METRIC_HELP.completion_rate} />
+                    </span>
+                  </th>
                 </>
               ) : isSales ? (
                 <>

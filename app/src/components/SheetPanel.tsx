@@ -8,7 +8,13 @@ import {
   formatCurrency,
   formatPercent,
 } from '../lib/utils'
-import { ShoppingCart, TrendingUp, DollarSign, Percent, Target } from 'lucide-react'
+import { CircleHelp, ShoppingCart, TrendingUp, DollarSign, Percent, Target } from 'lucide-react'
+
+const VIDEO_METRIC_HELP = {
+  hookRate: '% de pessoas que pararam o scroll e assistiram pelo menos 3 segundos do vídeo.',
+  holdRate: '% de pessoas que continuaram assistindo o vídeo após os primeiros segundos.',
+  completionRate: '% de pessoas que assistiram o vídeo quase até o final.',
+} as const
 
 interface SheetPanelProps {
   isSales: boolean
@@ -100,24 +106,33 @@ export function SheetPanel({
           <div className="text-sm font-medium text-white/60">Qualidade do Criativo</div>
 
           <div className="flex items-center justify-between">
-            <div title="3s Views / Impressões">
-              <div className="text-xs text-white/45 uppercase tracking-wide">Hook Rate</div>
+            <div>
+              <div className="flex items-center gap-1 text-xs text-white/45 uppercase tracking-wide">
+                <span>Hook Rate</span>
+                <CircleHelp className="h-3.5 w-3.5 text-white/35" title={VIDEO_METRIC_HELP.hookRate} aria-label={VIDEO_METRIC_HELP.hookRate} />
+              </div>
               <div className="text-[11px] text-white/35">3s Views / Impressões</div>
             </div>
             <span className="font-semibold text-cyan-400">{formatPercent(hookRate)}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <div title="ThruPlays / 3s Views">
-              <div className="text-xs text-white/45 uppercase tracking-wide">Hold Rate</div>
+            <div>
+              <div className="flex items-center gap-1 text-xs text-white/45 uppercase tracking-wide">
+                <span>Hold Rate</span>
+                <CircleHelp className="h-3.5 w-3.5 text-white/35" title={VIDEO_METRIC_HELP.holdRate} aria-label={VIDEO_METRIC_HELP.holdRate} />
+              </div>
               <div className="text-[11px] text-white/35">ThruPlays / 3s Views</div>
             </div>
             <span className="font-semibold text-green-400">{formatPercent(holdRate)}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <div title="95% do vídeo / Impressões">
-              <div className="text-xs text-white/45 uppercase tracking-wide">Completion Rate</div>
+            <div>
+              <div className="flex items-center gap-1 text-xs text-white/45 uppercase tracking-wide">
+                <span>Completion Rate</span>
+                <CircleHelp className="h-3.5 w-3.5 text-white/35" title={VIDEO_METRIC_HELP.completionRate} aria-label={VIDEO_METRIC_HELP.completionRate} />
+              </div>
               <div className="text-[11px] text-white/35">95% / Impressões</div>
             </div>
             <span className="font-semibold text-purple-400">{formatPercent(completionRate)}</span>
