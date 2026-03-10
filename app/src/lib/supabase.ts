@@ -106,6 +106,7 @@ export interface AggregatedCreative {
 
 export interface AggregatedCampaign {
   campaign_name: string
+  adset_name: string
   spend: number
   impressions: number
   link_clicks: number
@@ -445,6 +446,7 @@ export function aggregateCampaigns(
 
   for (const c of creatives) {
     const key = (c.campaign_name || '').trim() || '(sem campanha)'
+    const currentAdSetName = String(c.adset_name || '').trim()
     const existing = map.get(key)
 
     if (existing) {
@@ -466,11 +468,20 @@ export function aggregateCampaigns(
       existing.sheetPurchases += c.sheet_purchases || 0
       existing.sheetLeadsUtm += c.sheet_leads_utm || 0
       existing.sheetMqls += c.sheet_mqls || 0
+      if (currentAdSetName) {
+        const currentSets = existing.adset_name
+          ? existing.adset_name.split(' | ').map((name) => name.trim()).filter(Boolean)
+          : []
+        if (!currentSets.includes(currentAdSetName)) {
+          existing.adset_name = [...currentSets, currentAdSetName].join(' | ')
+        }
+      }
       continue
     }
 
     map.set(key, {
       campaign_name: key,
+      adset_name: currentAdSetName,
       spend: c.spend || 0,
       impressions: c.impressions || 0,
       link_clicks: c.link_clicks || 0,

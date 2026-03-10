@@ -182,6 +182,11 @@ export function CampaignsTable({ data, isSales, isVideoView = false, isMqlPrimar
                     <div className="truncate max-w-[360px] font-medium" title={campaign.campaign_name}>
                       {campaign.campaign_name}
                     </div>
+                    {isVideoView && campaign.adset_name && (
+                      <div className="text-xs text-white/30 truncate max-w-[360px]" title={campaign.adset_name}>
+                        {campaign.adset_name}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.spend)}</td>
                   {isVideoView ? (
