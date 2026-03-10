@@ -19,6 +19,11 @@ export interface DailySummary {
   total_impressions: number
   total_link_clicks: number
   total_page_views: number
+  total_thruplays: number
+  total_video_25_pct: number
+  total_video_50_pct: number
+  total_video_75_pct: number
+  total_video_95_pct: number
   total_leads: number
   total_purchases: number
   total_revenue: number
@@ -48,6 +53,11 @@ export interface AdCreative {
   impressions: number
   link_clicks: number
   page_views?: number
+  thruplays?: number
+  video_25_pct?: number
+  video_50_pct?: number
+  video_75_pct?: number
+  video_95_pct?: number
   leads: number
   purchases: number
   sheet_purchases: number
@@ -72,6 +82,11 @@ export interface AggregatedCreative {
   link_clicks: number
   page_views: number
   has_page_views: boolean
+  thruplays: number
+  video_25_pct: number
+  video_50_pct: number
+  video_75_pct: number
+  video_95_pct: number
   leads: number
   purchases: number
   sheetPurchases: number
@@ -91,6 +106,11 @@ export interface AggregatedCampaign {
   link_clicks: number
   page_views: number
   has_page_views: boolean
+  thruplays: number
+  video_25_pct: number
+  video_50_pct: number
+  video_75_pct: number
+  video_95_pct: number
   leads: number
   purchases: number
   sheetPurchases: number
@@ -174,6 +194,11 @@ export async function getAggregatedMetrics(
       impressions: acc.impressions + (day.total_impressions || 0),
       linkClicks: acc.linkClicks + (day.total_link_clicks || 0),
       pageViews: acc.pageViews + (day.total_page_views || 0),
+      thruplays: acc.thruplays + (day.total_thruplays || 0),
+      video25Pct: acc.video25Pct + (day.total_video_25_pct || 0),
+      video50Pct: acc.video50Pct + (day.total_video_50_pct || 0),
+      video75Pct: acc.video75Pct + (day.total_video_75_pct || 0),
+      video95Pct: acc.video95Pct + (day.total_video_95_pct || 0),
       leads: acc.leads + (day.total_leads || 0),
       purchases: acc.purchases + (day.total_purchases || 0),
       revenue: acc.revenue + (day.total_revenue || 0),
@@ -187,6 +212,11 @@ export async function getAggregatedMetrics(
       impressions: 0,
       linkClicks: 0,
       pageViews: 0,
+      thruplays: 0,
+      video25Pct: 0,
+      video50Pct: 0,
+      video75Pct: 0,
+      video95Pct: 0,
       leads: 0,
       purchases: 0,
       revenue: 0,
@@ -203,6 +233,7 @@ export async function getAggregatedMetrics(
   const cpl = realLeads > 0 ? totals.spend / realLeads : 0
   const cpc = totals.linkClicks > 0 ? totals.spend / totals.linkClicks : 0
   const cpa = totals.sheetSales > 0 ? totals.spend / totals.sheetSales : 0
+  const costPerThruplay = totals.thruplays > 0 ? totals.spend / totals.thruplays : 0
   const roas = totals.spend > 0 ? totals.sheetRevenue / totals.spend : 0
   const loadRate = totals.linkClicks > 0 ? (totals.pageViews / totals.linkClicks) * 100 : 0
   const conversionRate = totals.pageViews > 0 ? (realLeads / totals.pageViews) * 100 : 0
@@ -217,6 +248,7 @@ export async function getAggregatedMetrics(
     cpl,
     cpc,
     cpa,
+    costPerThruplay,
     roas,
     loadRate,
     conversionRate,
@@ -242,6 +274,39 @@ export async function getAdCreatives(
 
   if (error) {
     console.error('Error fetching ad creatives:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function getAdCreativesByCampaignPatterns(
+  startDate: string,
+  endDate: string,
+  patterns: string[]
+): Promise<AdCreative[]> {
+  const normalizedPatterns = Array.from(
+    new Set(patterns.map((pattern) => pattern.trim()).filter(Boolean))
+  )
+
+  if (normalizedPatterns.length === 0) {
+    return []
+  }
+
+  const orFilter = normalizedPatterns
+    .map((pattern) => `campaign_name.ilike.*${pattern.replace(/,/g, '')}*`)
+    .join(',')
+
+  const { data, error } = await supabase
+    .from('ad_creatives')
+    .select('*')
+    .or(orFilter)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching ad creatives by campaign patterns:', error)
     return []
   }
 
@@ -277,6 +342,11 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         existing.page_views += c.page_views || 0
         existing.has_page_views = true
       }
+      existing.thruplays += c.thruplays || 0
+      existing.video_25_pct += c.video_25_pct || 0
+      existing.video_50_pct += c.video_50_pct || 0
+      existing.video_75_pct += c.video_75_pct || 0
+      existing.video_95_pct += c.video_95_pct || 0
       existing.leads += c.leads || 0
       existing.purchases += c.purchases || 0
       existing.sheetPurchases += c.sheet_purchases || 0
@@ -315,6 +385,11 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         link_clicks: c.link_clicks || 0,
         page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
         has_page_views: typeof c.page_views === 'number',
+        thruplays: c.thruplays || 0,
+        video_25_pct: c.video_25_pct || 0,
+        video_50_pct: c.video_50_pct || 0,
+        video_75_pct: c.video_75_pct || 0,
+        video_95_pct: c.video_95_pct || 0,
         leads: c.leads || 0,
         purchases: c.purchases || 0,
         sheetPurchases: c.sheet_purchases || 0,
@@ -364,6 +439,11 @@ export function aggregateCampaigns(
         existing.page_views += c.page_views || 0
         existing.has_page_views = true
       }
+      existing.thruplays += c.thruplays || 0
+      existing.video_25_pct += c.video_25_pct || 0
+      existing.video_50_pct += c.video_50_pct || 0
+      existing.video_75_pct += c.video_75_pct || 0
+      existing.video_95_pct += c.video_95_pct || 0
       existing.leads += c.leads || 0
       existing.purchases += c.purchases || 0
       existing.sheetPurchases += c.sheet_purchases || 0
@@ -379,6 +459,11 @@ export function aggregateCampaigns(
       link_clicks: c.link_clicks || 0,
       page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
       has_page_views: typeof c.page_views === 'number',
+      thruplays: c.thruplays || 0,
+      video_25_pct: c.video_25_pct || 0,
+      video_50_pct: c.video_50_pct || 0,
+      video_75_pct: c.video_75_pct || 0,
+      video_95_pct: c.video_95_pct || 0,
       leads: c.leads || 0,
       purchases: c.purchases || 0,
       sheetPurchases: c.sheet_purchases || 0,

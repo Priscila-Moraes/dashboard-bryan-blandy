@@ -9,10 +9,14 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: "tnum" 1, "cv11" 1;
   background: #0a0a0f;
   color: #fff;
   min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom scrollbar */
