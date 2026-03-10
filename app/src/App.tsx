@@ -106,6 +106,7 @@ export default function App() {
             spend: number
             impressions: number
             linkClicks: number
+            video3sViews: number
             thruplays: number
             video25Pct: number
             video50Pct: number
@@ -127,6 +128,7 @@ export default function App() {
               spend: 0,
               impressions: 0,
               linkClicks: 0,
+              video3sViews: 0,
               thruplays: 0,
               video25Pct: 0,
               video50Pct: 0,
@@ -140,6 +142,7 @@ export default function App() {
           cur.spend += c.spend || 0
           cur.impressions += c.impressions || 0
           cur.linkClicks += c.link_clicks || 0
+          cur.video3sViews += c.video_3s_views || 0
           cur.thruplays += c.thruplays || 0
           cur.video25Pct += c.video_25_pct || 0
           cur.video50Pct += c.video_50_pct || 0
@@ -170,6 +173,7 @@ export default function App() {
               total_impressions: d.impressions,
               total_link_clicks: d.linkClicks,
               total_page_views: 0,
+              total_video_3s_views: d.video3sViews,
               total_thruplays: d.thruplays,
               total_video_25_pct: d.video25Pct,
               total_video_50_pct: d.video50Pct,
@@ -199,6 +203,7 @@ export default function App() {
             impressions: acc.impressions + (day.total_impressions || 0),
             linkClicks: acc.linkClicks + (day.total_link_clicks || 0),
             pageViews: acc.pageViews + (day.total_page_views || 0),
+            video3sViews: acc.video3sViews + (day.total_video_3s_views || 0),
             thruplays: acc.thruplays + (day.total_thruplays || 0),
             video25Pct: acc.video25Pct + (day.total_video_25_pct || 0),
             video50Pct: acc.video50Pct + (day.total_video_50_pct || 0),
@@ -217,6 +222,7 @@ export default function App() {
             impressions: 0,
             linkClicks: 0,
             pageViews: 0,
+            video3sViews: 0,
             thruplays: 0,
             video25Pct: 0,
             video50Pct: 0,
@@ -402,11 +408,11 @@ export default function App() {
                   </h3>
                   <Funnel
                     impressions={metrics.impressions}
-                    clicks={isVideoViewProduct ? metrics.thruplays : metrics.linkClicks}
-                    pageViews={isVideoViewProduct ? metrics.video50Pct : metrics.pageViews}
+                    clicks={isVideoViewProduct ? metrics.video3sViews : metrics.linkClicks}
+                    pageViews={isVideoViewProduct ? metrics.thruplays : metrics.pageViews}
                     conversions={
                       isVideoViewProduct
-                        ? metrics.video95Pct
+                        ? metrics.video75Pct
                         : isSalesProduct
                         ? metrics.sheetSales
                         : (isMqlPrimaryProduct
@@ -414,19 +420,19 @@ export default function App() {
                           : (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads))
                     }
                     conversionLabel={
-                      isVideoViewProduct ? '95% do video' : isSalesProduct ? 'Vendas' : (isMqlPrimaryProduct ? 'MQLs' : 'Leads')
+                      isVideoViewProduct ? '75% do video' : isSalesProduct ? 'Vendas' : (isMqlPrimaryProduct ? 'MQLs' : 'Leads')
                     }
-                    clicksLabel={isVideoViewProduct ? 'ThruPlays' : undefined}
-                    pageViewsLabel={isVideoViewProduct ? '50% do video' : undefined}
+                    clicksLabel={isVideoViewProduct ? '3s Views' : undefined}
+                    pageViewsLabel={isVideoViewProduct ? 'ThruPlays' : undefined}
                     secondaryConversions={
                       isVideoViewProduct
-                        ? metrics.video75Pct
+                        ? metrics.video50Pct
                         : !isSalesProduct && isMqlPrimaryProduct
                         ? (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads)
                         : undefined
                     }
                     secondaryConversionLabel={
-                      isVideoViewProduct ? '75% do video' : !isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined
+                      isVideoViewProduct ? '50% do video' : !isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined
                     }
                     hidePageViews={isNativeForm}
                   />
@@ -637,6 +643,7 @@ export default function App() {
                 roas={metrics.roas}
                 spend={metrics.spend}
                 impressions={metrics.impressions}
+                video3sViews={metrics.video3sViews}
                 thruplays={metrics.thruplays}
                 video25Pct={metrics.video25Pct}
                 video50Pct={metrics.video50Pct}

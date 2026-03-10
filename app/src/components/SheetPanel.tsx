@@ -14,6 +14,7 @@ interface SheetPanelProps {
   roas: number
   spend: number
   impressions?: number
+  video3sViews?: number
   thruplays?: number
   video25Pct?: number
   video50Pct?: number
@@ -34,6 +35,7 @@ export function SheetPanel({
   roas,
   spend,
   impressions = 0,
+  video3sViews = 0,
   thruplays = 0,
   video25Pct = 0,
   video50Pct = 0,
@@ -43,6 +45,9 @@ export function SheetPanel({
   if (isVideoView) {
     const costPerThruplay = thruplays > 0 ? spend / thruplays : 0
     const thruplayRate = impressions > 0 ? (thruplays / impressions) * 100 : 0
+    const hookRate = impressions > 0 ? (video3sViews / impressions) * 100 : 0
+    const holdRate = video3sViews > 0 ? (thruplays / video3sViews) * 100 : 0
+    const completionRate = impressions > 0 ? (video95Pct / impressions) * 100 : 0
     const quartiles = [
       { label: '25% do video', value: video25Pct },
       { label: '50% do video', value: video50Pct },
@@ -79,6 +84,34 @@ export function SheetPanel({
               className="h-full bg-gradient-to-r from-cyan-500 to-green-500 rounded-full"
               style={{ width: `${Math.min(thruplayRate, 100)}%` }}
             />
+          </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
+          <div className="text-sm font-medium text-white/60">Qualidade do Criativo</div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-white/45 uppercase tracking-wide">Hook Rate</div>
+              <div className="text-[11px] text-white/35">3s Views / Impressões</div>
+            </div>
+            <span className="font-semibold text-cyan-400">{formatPercent(hookRate)}</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-white/45 uppercase tracking-wide">Hold Rate</div>
+              <div className="text-[11px] text-white/35">ThruPlays / 3s Views</div>
+            </div>
+            <span className="font-semibold text-green-400">{formatPercent(holdRate)}</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-white/45 uppercase tracking-wide">Completion Rate</div>
+              <div className="text-[11px] text-white/35">95% / Impressões</div>
+            </div>
+            <span className="font-semibold text-purple-400">{formatPercent(completionRate)}</span>
           </div>
         </div>
 

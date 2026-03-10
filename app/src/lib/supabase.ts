@@ -19,6 +19,7 @@ export interface DailySummary {
   total_impressions: number
   total_link_clicks: number
   total_page_views: number
+  total_video_3s_views?: number
   total_thruplays?: number
   total_video_25_pct?: number
   total_video_50_pct?: number
@@ -53,6 +54,7 @@ export interface AdCreative {
   impressions: number
   link_clicks: number
   page_views?: number
+  video_3s_views?: number
   thruplays?: number
   video_25_pct?: number
   video_50_pct?: number
@@ -82,6 +84,7 @@ export interface AggregatedCreative {
   link_clicks: number
   page_views: number
   has_page_views: boolean
+  video_3s_views: number
   thruplays: number
   video_25_pct: number
   video_50_pct: number
@@ -106,6 +109,7 @@ export interface AggregatedCampaign {
   link_clicks: number
   page_views: number
   has_page_views: boolean
+  video_3s_views: number
   thruplays: number
   video_25_pct: number
   video_50_pct: number
@@ -194,6 +198,7 @@ export async function getAggregatedMetrics(
       impressions: acc.impressions + (day.total_impressions || 0),
       linkClicks: acc.linkClicks + (day.total_link_clicks || 0),
       pageViews: acc.pageViews + (day.total_page_views || 0),
+      video3sViews: acc.video3sViews + (day.total_video_3s_views || 0),
       thruplays: acc.thruplays + (day.total_thruplays || 0),
       video25Pct: acc.video25Pct + (day.total_video_25_pct || 0),
       video50Pct: acc.video50Pct + (day.total_video_50_pct || 0),
@@ -212,6 +217,7 @@ export async function getAggregatedMetrics(
       impressions: 0,
       linkClicks: 0,
       pageViews: 0,
+      video3sViews: 0,
       thruplays: 0,
       video25Pct: 0,
       video50Pct: 0,
@@ -335,9 +341,10 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       existing.impressions += c.impressions || 0
       existing.link_clicks += c.link_clicks || 0
       if (typeof c.page_views === 'number') {
-      existing.page_views += c.page_views || 0
-      existing.has_page_views = true
+        existing.page_views += c.page_views || 0
+        existing.has_page_views = true
       }
+      existing.video_3s_views += c.video_3s_views || 0
       existing.thruplays += c.thruplays || 0
       existing.video_25_pct += c.video_25_pct || 0
       existing.video_50_pct += c.video_50_pct || 0
@@ -381,6 +388,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         link_clicks: c.link_clicks || 0,
         page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
         has_page_views: typeof c.page_views === 'number',
+        video_3s_views: c.video_3s_views || 0,
         thruplays: c.thruplays || 0,
         video_25_pct: c.video_25_pct || 0,
         video_50_pct: c.video_50_pct || 0,
@@ -435,6 +443,7 @@ export function aggregateCampaigns(
         existing.page_views += c.page_views || 0
         existing.has_page_views = true
       }
+      existing.video_3s_views += c.video_3s_views || 0
       existing.thruplays += c.thruplays || 0
       existing.video_25_pct += c.video_25_pct || 0
       existing.video_50_pct += c.video_50_pct || 0
@@ -455,6 +464,7 @@ export function aggregateCampaigns(
       link_clicks: c.link_clicks || 0,
       page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
       has_page_views: typeof c.page_views === 'number',
+      video_3s_views: c.video_3s_views || 0,
       thruplays: c.thruplays || 0,
       video_25_pct: c.video_25_pct || 0,
       video_50_pct: c.video_50_pct || 0,
