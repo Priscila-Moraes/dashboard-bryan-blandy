@@ -544,6 +544,92 @@ export function aggregateCampaigns(
   return result
 }
 
+export function aggregateAdSets(
+  creatives: AdCreative[]
+): AggregatedCampaign[] {
+  const map = new Map<string, AggregatedCampaign>()
+  const isVideoViewProduct = creatives.some((item) => item.product_name === 'engajamento-video-view')
+
+  for (const c of creatives) {
+    const adSetKey = (c.adset_name || '').trim() || '(sem conjunto)'
+    const parentCampaignName = (c.campaign_name || '').trim() || '(sem campanha)'
+    const existing = map.get(adSetKey)
+
+    if (existing) {
+      existing.spend += c.spend || 0
+      existing.impressions += c.impressions || 0
+      existing.link_clicks += c.link_clicks || 0
+      if (typeof c.page_views === 'number') {
+        existing.page_views += c.page_views || 0
+        existing.has_page_views = true
+      }
+      existing.video_3s_views += c.video_3s_views || 0
+      existing.thruplays += c.thruplays || 0
+      existing.video_25_pct += c.video_25_pct || 0
+      existing.video_50_pct += c.video_50_pct || 0
+      existing.video_75_pct += c.video_75_pct || 0
+      existing.video_95_pct += c.video_95_pct || 0
+      existing.leads += c.leads || 0
+      existing.purchases += c.purchases || 0
+      existing.sheetPurchases += c.sheet_purchases || 0
+      existing.sheetLeadsUtm += c.sheet_leads_utm || 0
+      existing.sheetMqls += c.sheet_mqls || 0
+      existing.ctr_weighted_sum = (existing.ctr_weighted_sum || 0) + (c.impressions || 0) * (c.ctr || 0)
+      continue
+    }
+
+    map.set(adSetKey, {
+      campaign_name: adSetKey,
+      adset_name: parentCampaignName,
+      spend: c.spend || 0,
+      impressions: c.impressions || 0,
+      link_clicks: c.link_clicks || 0,
+      page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
+      has_page_views: typeof c.page_views === 'number',
+      video_3s_views: c.video_3s_views || 0,
+      thruplays: c.thruplays || 0,
+      video_25_pct: c.video_25_pct || 0,
+      video_50_pct: c.video_50_pct || 0,
+      video_75_pct: c.video_75_pct || 0,
+      video_95_pct: c.video_95_pct || 0,
+      leads: c.leads || 0,
+      purchases: c.purchases || 0,
+      sheetPurchases: c.sheet_purchases || 0,
+      sheetLeadsUtm: c.sheet_leads_utm || 0,
+      sheetMqls: c.sheet_mqls || 0,
+      cpc: 0,
+      load_rate: null,
+      cpl: 0,
+      cpa: 0,
+      ctr: 0,
+      ctr_weighted_sum: (c.impressions || 0) * (c.ctr || 0),
+    })
+  }
+
+  const result = Array.from(map.values()).map((c) => {
+    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
+    const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
+
+    return {
+      ...c,
+      cpc: c.link_clicks > 0 ? c.spend / c.link_clicks : 0,
+      load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
+      cpl: realLeads > 0 ? c.spend / realLeads : 0,
+      cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
+      ctr: isVideoViewProduct
+        ? c.impressions > 0
+          ? (c.ctr_weighted_sum || 0) / c.impressions
+          : 0
+        : c.impressions > 0
+          ? (c.link_clicks / c.impressions) * 100
+          : 0,
+    }
+  })
+
+  result.sort((a, b) => b.spend - a.spend)
+  return result
+}
+
 export async function getUnattributedMqlLeads(
   productName: string,
   startDate: string,

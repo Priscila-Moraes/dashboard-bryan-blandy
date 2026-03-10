@@ -36,6 +36,7 @@ export function CampaignsTable({ data, isSales, isVideoView = false, isMqlPrimar
     return <div className="text-center py-8 text-white/40">Sem dados de campanhas para o período</div>
   }
 
+  const nameLabel = isVideoView ? 'Conjunto' : 'Campanha'
   const conversionLabel = isVideoView ? 'ThruPlays' : isSales ? 'Vendas' : isMqlPrimary ? 'MQLs' : 'Leads'
   const costLabel = isVideoView ? 'Custo/TP' : isSales ? 'CPA' : isMqlPrimary ? 'Custo/MQL' : 'CPL'
 
@@ -146,7 +147,7 @@ export function CampaignsTable({ data, isSales, isVideoView = false, isMqlPrimar
           <thead>
             <tr className="text-left text-xs text-white/50 uppercase border-b border-white/10">
               <th className="pb-3 pr-4">#</th>
-              <th className="pb-3 pr-4">Campanha</th>
+              <th className="pb-3 pr-4">{nameLabel}</th>
               <th className="pb-3 pr-4 text-right">Gasto</th>
               {isVideoView ? (
                 <>

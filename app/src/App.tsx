@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAggregatedMetrics, getAdCreatives, getAdCreativesByCampaignPatterns, aggregateCreatives, aggregateCampaigns, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
+import { getAggregatedMetrics, getAdCreatives, getAdCreativesByCampaignPatterns, aggregateCreatives, aggregateCampaigns, aggregateAdSets, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
 import type { AggregatedCreative, AggregatedCampaign, UnattributedMqlLead } from './lib/supabase'
 import { formatCurrency, formatNumber, formatPercent, getDateRange } from './lib/utils'
 import { DatePicker } from './components/DatePicker'
@@ -91,11 +91,11 @@ export default function App() {
       setLatestAvailableDate(null)
 
       if (data?.dailyData) {
-        setCampaigns(aggregateCampaigns(rawCreatives))
+        setCampaigns(isVideoViewProduct ? aggregateAdSets(rawCreatives) : aggregateCampaigns(rawCreatives))
         setMetrics(data)
         setDailyData(data.dailyData)
       } else if (rawCreatives.length > 0) {
-        setCampaigns(aggregateCampaigns(rawCreatives))
+        setCampaigns(isVideoViewProduct ? aggregateAdSets(rawCreatives) : aggregateCampaigns(rawCreatives))
         // Fallback: se o job do daily_summary nao rodou para hoje/ontem mas os criativos existem,
         // ainda da para exibir gasto/cliques/leads e a tabela normalmente.
         setUsingCreativesFallback(true)
@@ -593,8 +593,8 @@ export default function App() {
               {/* Creatives Table */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                 <h3 className="text-sm font-medium text-white/60 mb-4">
-                  Campanhas
-                  <span className="text-xs text-white/30 ml-2">({campaigns.length} campanhas)</span>
+                  {isVideoViewProduct ? 'Conjuntos' : 'Campanhas'}
+                  <span className="text-xs text-white/30 ml-2">({campaigns.length} {isVideoViewProduct ? 'conjuntos' : 'campanhas'})</span>
                 </h3>
                 <CampaignsTable
                   data={campaigns}
