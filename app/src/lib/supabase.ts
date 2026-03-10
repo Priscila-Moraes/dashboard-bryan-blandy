@@ -102,6 +102,7 @@ export interface AggregatedCreative {
   cpa: number
   ctr: number
   instagram_permalink: string
+  ctr_weighted_sum?: number
 }
 
 export interface AggregatedCampaign {
@@ -128,6 +129,7 @@ export interface AggregatedCampaign {
   cpl: number
   cpa: number
   ctr: number
+  ctr_weighted_sum?: number
 }
 
 export interface UnattributedMqlLead {
@@ -332,6 +334,7 @@ function normalizeCreativeGroupKey(adName: string | null | undefined): string {
 // Agregar criativos por ad_name normalizado (fallback ad_id) para evitar duplicidade visual.
 export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[] {
   const map = new Map<string, AggregatedCreative>()
+  const isVideoViewProduct = creatives.some((item) => item.product_name === 'engajamento-video-view')
 
   for (const c of creatives) {
     const currentAdName = String(c.ad_name || '').trim()
@@ -359,6 +362,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       existing.sheetPurchases += c.sheet_purchases || 0
       existing.sheetLeadsUtm += c.sheet_leads_utm || 0
       existing.sheetMqls += c.sheet_mqls || 0
+      existing.ctr_weighted_sum = (existing.ctr_weighted_sum || 0) + (c.impressions || 0) * (c.ctr || 0)
       if (currentAdId && !existing.grouped_ad_ids.includes(currentAdId)) {
         existing.grouped_ad_ids.push(currentAdId)
         existing.grouped_ids_count = existing.grouped_ad_ids.length
@@ -416,6 +420,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         cpl: 0,
         cpa: 0,
         ctr: 0,
+        ctr_weighted_sum: (c.impressions || 0) * (c.ctr || 0),
         instagram_permalink: c.instagram_permalink || '',
       })
     }
@@ -431,7 +436,13 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
-      ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
+      ctr: isVideoViewProduct
+        ? c.impressions > 0
+          ? (c.ctr_weighted_sum || 0) / c.impressions
+          : 0
+        : c.impressions > 0
+          ? (c.link_clicks / c.impressions) * 100
+          : 0,
     }
   })
 
@@ -443,6 +454,7 @@ export function aggregateCampaigns(
   creatives: AdCreative[]
 ): AggregatedCampaign[] {
   const map = new Map<string, AggregatedCampaign>()
+  const isVideoViewProduct = creatives.some((item) => item.product_name === 'engajamento-video-view')
 
   for (const c of creatives) {
     const key = (c.campaign_name || '').trim() || '(sem campanha)'
@@ -468,6 +480,7 @@ export function aggregateCampaigns(
       existing.sheetPurchases += c.sheet_purchases || 0
       existing.sheetLeadsUtm += c.sheet_leads_utm || 0
       existing.sheetMqls += c.sheet_mqls || 0
+      existing.ctr_weighted_sum = (existing.ctr_weighted_sum || 0) + (c.impressions || 0) * (c.ctr || 0)
       if (currentAdSetName) {
         const currentSets = existing.adset_name
           ? existing.adset_name.split(' | ').map((name) => name.trim()).filter(Boolean)
@@ -503,6 +516,7 @@ export function aggregateCampaigns(
       cpl: 0,
       cpa: 0,
       ctr: 0,
+      ctr_weighted_sum: (c.impressions || 0) * (c.ctr || 0),
     })
   }
 
@@ -516,7 +530,13 @@ export function aggregateCampaigns(
       load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
-      ctr: c.impressions > 0 ? (c.link_clicks / c.impressions) * 100 : 0,
+      ctr: isVideoViewProduct
+        ? c.impressions > 0
+          ? (c.ctr_weighted_sum || 0) / c.impressions
+          : 0
+        : c.impressions > 0
+          ? (c.link_clicks / c.impressions) * 100
+          : 0,
     }
   })
 
