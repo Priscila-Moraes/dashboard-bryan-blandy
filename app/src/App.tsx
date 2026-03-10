@@ -42,6 +42,7 @@ export default function App() {
   const [metrics, setMetrics] = useState<any>(null)
   const [dailyData, setDailyData] = useState<any[]>([])
   const [campaigns, setCampaigns] = useState<AggregatedCampaign[]>([])
+  const [adSets, setAdSets] = useState<AggregatedCampaign[]>([])
   const [creatives, setCreatives] = useState<AggregatedCreative[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
@@ -91,11 +92,13 @@ export default function App() {
       setLatestAvailableDate(null)
 
       if (data?.dailyData) {
-        setCampaigns(isVideoViewProduct ? aggregateAdSets(rawCreatives) : aggregateCampaigns(rawCreatives))
+        setCampaigns(aggregateCampaigns(rawCreatives))
+        setAdSets(isVideoViewProduct ? aggregateAdSets(rawCreatives) : [])
         setMetrics(data)
         setDailyData(data.dailyData)
       } else if (rawCreatives.length > 0) {
-        setCampaigns(isVideoViewProduct ? aggregateAdSets(rawCreatives) : aggregateCampaigns(rawCreatives))
+        setCampaigns(aggregateCampaigns(rawCreatives))
+        setAdSets(isVideoViewProduct ? aggregateAdSets(rawCreatives) : [])
         // Fallback: se o job do daily_summary nao rodou para hoje/ontem mas os criativos existem,
         // ainda da para exibir gasto/cliques/leads e a tabela normalmente.
         setUsingCreativesFallback(true)
@@ -264,6 +267,7 @@ export default function App() {
         setDailyData(dailyFallback)
       } else {
         setCampaigns([])
+        setAdSets([])
         // Sem daily_summary e sem criativos no range: de fato nao ha o que renderizar.
         setMetrics(null)
         setDailyData([])
@@ -593,16 +597,35 @@ export default function App() {
               {/* Creatives Table */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                 <h3 className="text-sm font-medium text-white/60 mb-4">
-                  {isVideoViewProduct ? 'Conjuntos' : 'Campanhas'}
-                  <span className="text-xs text-white/30 ml-2">({campaigns.length} {isVideoViewProduct ? 'conjuntos' : 'campanhas'})</span>
+                  Campanhas
+                  <span className="text-xs text-white/30 ml-2">({campaigns.length} campanhas)</span>
                 </h3>
                 <CampaignsTable
                   data={campaigns}
                   isSales={isSalesProduct}
                   isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
+                  nameLabel="Campanha"
+                  showVideoSubtitle={false}
                 />
               </div>
+
+              {isVideoViewProduct && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                  <h3 className="text-sm font-medium text-white/60 mb-4">
+                    Conjuntos
+                    <span className="text-xs text-white/30 ml-2">({adSets.length} conjuntos)</span>
+                  </h3>
+                  <CampaignsTable
+                    data={adSets}
+                    isSales={isSalesProduct}
+                    isVideoView
+                    isMqlPrimary={isMqlPrimaryProduct}
+                    nameLabel="Conjunto"
+                    showVideoSubtitle
+                  />
+                </div>
+              )}
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                 <h3 className="text-sm font-medium text-white/60 mb-4">
