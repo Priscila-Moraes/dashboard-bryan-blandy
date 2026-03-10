@@ -434,6 +434,11 @@ export function CreativesTable({
                     <div className="text-xs text-white/30 truncate max-w-[200px]" title={creative.campaign_name}>
                       {creative.campaign_name}
                     </div>
+                    {isVideoView && creative.adset_name && (
+                      <div className="text-xs text-white/25 truncate max-w-[200px]" title={creative.adset_name}>
+                        {creative.adset_name}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(creative.spend)}</td>
                   {(showDeliveryMetrics || isVideoView) && (

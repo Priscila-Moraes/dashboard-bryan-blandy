@@ -50,6 +50,7 @@ export interface AdCreative {
   product_name: string
   ad_name: string
   ad_id: string
+  adset_name?: string
   spend: number
   impressions: number
   link_clicks: number
@@ -79,6 +80,7 @@ export interface AggregatedCreative {
   grouped_names: string[]
   grouped_names_count: number
   campaign_name: string
+  adset_name: string
   spend: number
   impressions: number
   link_clicks: number
@@ -333,6 +335,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   for (const c of creatives) {
     const currentAdName = String(c.ad_name || '').trim()
     const currentAdId = (c.ad_id || '').trim()
+    const currentAdSetName = String(c.adset_name || '').trim()
     const key = normalizeCreativeGroupKey(currentAdName) || currentAdId
     const existing = map.get(key)
 
@@ -369,6 +372,14 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
       if (!existing.ad_name && currentAdName) {
         existing.ad_name = currentAdName
       }
+      if (currentAdSetName) {
+        const currentSets = existing.adset_name
+          ? existing.adset_name.split(' | ').map((name) => name.trim()).filter(Boolean)
+          : []
+        if (!currentSets.includes(currentAdSetName)) {
+          existing.adset_name = [...currentSets, currentAdSetName].join(' | ')
+        }
+      }
       if (c.instagram_permalink) {
         existing.instagram_permalink = c.instagram_permalink
       }
@@ -383,6 +394,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         grouped_names: groupedNames,
         grouped_names_count: groupedNames.length,
         campaign_name: c.campaign_name,
+        adset_name: currentAdSetName,
         spend: c.spend || 0,
         impressions: c.impressions || 0,
         link_clicks: c.link_clicks || 0,
