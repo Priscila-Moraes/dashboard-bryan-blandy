@@ -346,7 +346,7 @@ export function CreativesTable({
                   <th className="pb-3 pr-4 text-right">{leadsView === 'mql' ? 'Custo/MQL' : 'CPL'}</th>
                 </>
               )}
-              <th className="pb-3 pr-4 text-right">CTR</th>
+              {!isVideoView && <th className="pb-3 pr-4 text-right">CTR</th>}
               <th className="pb-3 text-center">Link</th>
             </tr>
           </thead>
@@ -497,7 +497,6 @@ export function CreativesTable({
                       <td className="py-3 pr-4 text-right text-cyan-300">{formatPercent(hookRate)}</td>
                       <td className="py-3 pr-4 text-right text-green-300">{formatPercent(holdRate)}</td>
                       <td className="py-3 pr-4 text-right text-purple-300">{formatPercent(completionRate)}</td>
-                      <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(creative.ctr)}</td>
                     </>
                   ) : (
                     <>
