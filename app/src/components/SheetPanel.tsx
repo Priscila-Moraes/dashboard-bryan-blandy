@@ -1,4 +1,13 @@
-import { formatCurrency, formatPercent } from '../lib/utils'
+import {
+  calculateCompletionRate,
+  calculateCostPer,
+  calculateHoldRate,
+  calculateHookRate,
+  calculateRate,
+  calculateThruplayRate,
+  formatCurrency,
+  formatPercent,
+} from '../lib/utils'
 import { ShoppingCart, TrendingUp, DollarSign, Percent, Target } from 'lucide-react'
 
 interface SheetPanelProps {
@@ -43,23 +52,23 @@ export function SheetPanel({
   video95Pct = 0,
 }: SheetPanelProps) {
   if (isVideoView) {
-    const costPerThruplay = thruplays > 0 ? spend / thruplays : 0
-    const thruplayRate = impressions > 0 ? (thruplays / impressions) * 100 : 0
-    const hookRate = impressions > 0 ? (video3sViews / impressions) * 100 : 0
-    const holdRate = video3sViews > 0 ? (thruplays / video3sViews) * 100 : 0
-    const completionRate = impressions > 0 ? (video95Pct / impressions) * 100 : 0
+    const costPerThruplay = calculateCostPer(spend, thruplays)
+    const thruplayRate = calculateThruplayRate(thruplays, impressions)
+    const hookRate = calculateHookRate(video3sViews, impressions)
+    const holdRate = calculateHoldRate(thruplays, video3sViews)
+    const completionRate = calculateCompletionRate(video95Pct, impressions)
     const quartiles = [
-      { label: '25% do video', value: video25Pct },
-      { label: '50% do video', value: video50Pct },
-      { label: '75% do video', value: video75Pct },
-      { label: '95% do video', value: video95Pct },
+      { label: '25% do vídeo', value: video25Pct },
+      { label: '50% do vídeo', value: video50Pct },
+      { label: '75% do vídeo', value: video75Pct },
+      { label: '95% do vídeo', value: video95Pct },
     ]
 
     return (
       <div className="bg-white/5 border border-white/10 rounded-xl p-6 sticky top-24 space-y-6">
         <div className="flex items-center gap-2 text-sm font-medium text-white/60">
           <Target className="w-4 h-4" />
-          <span>Metricas de Video</span>
+          <span>Métricas de Vídeo</span>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -117,7 +126,7 @@ export function SheetPanel({
 
         <div className="space-y-3">
           {quartiles.map((quartile) => {
-            const rate = impressions > 0 ? (quartile.value / impressions) * 100 : 0
+            const rate = calculateRate(quartile.value, impressions)
 
             return (
               <div key={quartile.label}>
@@ -125,7 +134,7 @@ export function SheetPanel({
                   <div className="text-sm text-white/60">{quartile.label}</div>
                   <div className="text-right">
                     <div className="font-semibold text-white">{quartile.value.toLocaleString('pt-BR')}</div>
-                    <div className="text-xs text-white/40">{formatPercent(rate)} das impressoes</div>
+                    <div className="text-xs text-white/40">{formatPercent(rate)} das impressões</div>
                   </div>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">

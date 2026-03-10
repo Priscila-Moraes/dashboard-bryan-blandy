@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getAggregatedMetrics, getAdCreatives, getAdCreativesByCampaignPatterns, aggregateCreatives, aggregateCampaigns, aggregateAdSets, getLatestDailySummaryDate, getUnattributedMqlLeads } from './lib/supabase'
 import type { AggregatedCreative, AggregatedCampaign, UnattributedMqlLead } from './lib/supabase'
-import { formatCurrency, formatNumber, formatPercent, getDateRange } from './lib/utils'
+import { calculateCostPer, calculateThruplayRate, formatCurrency, formatNumber, formatPercent, getDateRange } from './lib/utils'
 import { DatePicker } from './components/DatePicker'
 import { Funnel } from './components/Funnel'
 import { MetricCard } from './components/MetricCard'
@@ -408,7 +408,7 @@ export default function App() {
                 {/* Funnel */}
                 <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                   <h3 className="text-sm font-medium text-white/60 mb-4">
-                    {isVideoViewProduct ? 'Consumo de Video' : 'Funil de Conversão'}
+                    {isVideoViewProduct ? 'Consumo de Vídeo' : 'Funil de Conversão'}
                   </h3>
                   <Funnel
                     impressions={metrics.impressions}
@@ -424,7 +424,7 @@ export default function App() {
                           : (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads))
                     }
                     conversionLabel={
-                      isVideoViewProduct ? '75% do video' : isSalesProduct ? 'Vendas' : (isMqlPrimaryProduct ? 'MQLs' : 'Leads')
+                      isVideoViewProduct ? '75% do vídeo' : isSalesProduct ? 'Vendas' : (isMqlPrimaryProduct ? 'MQLs' : 'Leads')
                     }
                     clicksLabel={isVideoViewProduct ? '3s Views' : undefined}
                     pageViewsLabel={isVideoViewProduct ? 'ThruPlays' : undefined}
@@ -440,7 +440,7 @@ export default function App() {
                     }
                     extraSteps={
                       isVideoViewProduct
-                        ? [{ label: '95% do video', value: metrics.video95Pct }]
+                        ? [{ label: '95% do vídeo', value: metrics.video95Pct }]
                         : undefined
                     }
                     hidePageViews={isNativeForm}
@@ -471,18 +471,18 @@ export default function App() {
                       />
                       <MetricCard
                         label="Custo/TP"
-                        value={metrics.thruplays > 0 ? formatCurrency(metrics.spend / metrics.thruplays) : '—'}
+                        value={metrics.thruplays > 0 ? formatCurrency(calculateCostPer(metrics.spend, metrics.thruplays)) : '—'}
                         icon={<Users className="w-5 h-5" />}
                         color="yellow"
                       />
                       <MetricCard
                         label="ThruPlay Rate"
-                        value={formatPercent(metrics.impressions > 0 ? (metrics.thruplays / metrics.impressions) * 100 : 0)}
+                        value={formatPercent(calculateThruplayRate(metrics.thruplays, metrics.impressions))}
                         icon={<Percent className="w-5 h-5" />}
                         color="blue"
                       />
                       <MetricCard
-                        label="75% do video"
+                        label="75% do vídeo"
                         value={formatNumber(metrics.video75Pct)}
                         icon={<TrendingUp className="w-5 h-5" />}
                         color="purple"

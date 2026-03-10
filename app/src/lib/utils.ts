@@ -20,6 +20,30 @@ export function formatPercent(value: number): string {
   return value.toFixed(2).replace('.', ',') + '%'
 }
 
+export function calculateRate(numerator: number, denominator: number): number {
+  return denominator > 0 ? (numerator / denominator) * 100 : 0
+}
+
+export function calculateCostPer(spend: number, conversions: number): number {
+  return conversions > 0 ? spend / conversions : 0
+}
+
+export function calculateThruplayRate(thruplays: number, impressions: number): number {
+  return calculateRate(thruplays, impressions)
+}
+
+export function calculateHookRate(video3sViews: number, impressions: number): number {
+  return calculateRate(video3sViews, impressions)
+}
+
+export function calculateHoldRate(thruplays: number, video3sViews: number): number {
+  return calculateRate(thruplays, video3sViews)
+}
+
+export function calculateCompletionRate(video95Pct: number, impressions: number): number {
+  return calculateRate(video95Pct, impressions)
+}
+
 export function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00')
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })

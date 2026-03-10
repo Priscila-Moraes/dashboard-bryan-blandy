@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { formatCurrency, formatNumber, formatPercent } from '../lib/utils'
+import {
+  calculateCompletionRate,
+  calculateCostPer,
+  calculateHoldRate,
+  calculateHookRate,
+  formatCurrency,
+  formatNumber,
+  formatPercent,
+} from '../lib/utils'
 import { ExternalLink, Trophy, ArrowUpDown } from 'lucide-react'
 import type { AggregatedCreative } from '../lib/supabase'
 
@@ -64,7 +72,7 @@ export function CreativesTable({
   totalSheetLeads,
   totalSheetMqls,
 }: CreativesTableProps) {
-  const [sortBy, setSortBy] = useState<SortKey>('conversions')
+  const [sortBy, setSortBy] = useState<SortKey>(isVideoView ? 'hold_rate' : 'conversions')
   const [leadsView, setLeadsView] = useState<LeadsView>(() => {
     if (isMqlPrimary) return 'mql'
     if (typeof totalSheetMqls === 'number' && totalSheetMqls > 0) return 'mql'
@@ -83,6 +91,10 @@ export function CreativesTable({
     }
     setLeadsView('leads')
   }, [isSales, isMqlPrimary, totalSheetMqls])
+
+  useEffect(() => {
+    setSortBy(isVideoView ? 'hold_rate' : 'conversions')
+  }, [isVideoView])
 
   if (!data || data.length === 0) {
     return <div className="text-center py-8 text-white/40">Sem dados de criativos para o período</div>
@@ -172,15 +184,13 @@ export function CreativesTable({
     const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases || 0
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads || 0
     const realMqls = c.sheetMqls || 0
-    const hookRate = c.impressions > 0 ? ((c.video_3s_views || 0) / c.impressions) * 100 : 0
-    const holdRate = (c.video_3s_views || 0) > 0 ? ((c.thruplays || 0) / (c.video_3s_views || 0)) * 100 : 0
-    const completionRate = c.impressions > 0 ? ((c.video_95_pct || 0) / c.impressions) * 100 : 0
+    const hookRate = calculateHookRate(c.video_3s_views || 0, c.impressions || 0)
+    const holdRate = calculateHoldRate(c.thruplays || 0, c.video_3s_views || 0)
+    const completionRate = calculateCompletionRate(c.video_95_pct || 0, c.impressions || 0)
 
     const conversions = isVideoView ? c.thruplays || 0 : isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
     const costPer = isVideoView
-      ? conversions > 0
-        ? c.spend / conversions
-        : 0
+      ? calculateCostPer(c.spend || 0, conversions)
       : isSales
       ? c.cpa || 0
       : leadsView === 'mql'
@@ -236,6 +246,33 @@ export function CreativesTable({
     }
     return vb - va
   })
+
+  const winnerKey = useMemo(() => {
+    if (!isVideoView || data.length === 0) return null
+
+    const maxThruplays = Math.max(...data.map((creative) => creative.thruplays || 0), 0)
+    const minimumThruplays = Math.max(30, Math.ceil(maxThruplays * 0.1))
+    const candidates = data.filter((creative) => (creative.thruplays || 0) >= minimumThruplays)
+    const pool = candidates.length > 0 ? candidates : data
+
+    const winner = [...pool].sort((a, b) => {
+      const holdDiff =
+        calculateHoldRate(b.thruplays || 0, b.video_3s_views || 0) -
+        calculateHoldRate(a.thruplays || 0, a.video_3s_views || 0)
+      if (Math.abs(holdDiff) > 0.0001) return holdDiff
+
+      const costDiff =
+        calculateCostPer(a.spend || 0, a.thruplays || 0) -
+        calculateCostPer(b.spend || 0, b.thruplays || 0)
+      if (Math.abs(costDiff) > 0.0001) return costDiff
+
+      return (b.thruplays || 0) - (a.thruplays || 0)
+    })[0]
+
+    if (!winner) return null
+
+    return `${winner.ad_name}-${winner.ad_id || winner.grouped_ad_ids?.[0] || ''}`
+  }, [data, isVideoView])
 
   const topRows = sorted.slice(0, 10)
 
@@ -356,14 +393,12 @@ export function CreativesTable({
               const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases || 0
               const realLeads = creative.sheetLeadsUtm > 0 ? creative.sheetLeadsUtm : creative.leads || 0
               const realMqls = creative.sheetMqls || 0
-              const hookRate = creative.impressions > 0 ? ((creative.video_3s_views || 0) / creative.impressions) * 100 : 0
-              const holdRate = (creative.video_3s_views || 0) > 0 ? ((creative.thruplays || 0) / (creative.video_3s_views || 0)) * 100 : 0
-              const completionRate = creative.impressions > 0 ? ((creative.video_95_pct || 0) / creative.impressions) * 100 : 0
+              const hookRate = calculateHookRate(creative.video_3s_views || 0, creative.impressions || 0)
+              const holdRate = calculateHoldRate(creative.thruplays || 0, creative.video_3s_views || 0)
+              const completionRate = calculateCompletionRate(creative.video_95_pct || 0, creative.impressions || 0)
               const conversions = isVideoView ? creative.thruplays || 0 : isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
               const costPerConversion = isVideoView
-                ? conversions > 0
-                  ? creative.spend / conversions
-                  : 0
+                ? calculateCostPer(creative.spend || 0, conversions)
                 : isSales
                 ? creative.cpa
                 : leadsView === 'mql'
@@ -412,14 +447,18 @@ export function CreativesTable({
                 primaryAdId.length > 10
                   ? `${primaryAdId.slice(0, 6)}...${primaryAdId.slice(-4)}`
                   : primaryAdId
+              const rowKey = `${displayCreativeName}-${groupedAdIds[0] || creative.ad_id || index}`
+              const isWinner = isVideoView && winnerKey === `${creative.ad_name}-${creative.ad_id || creative.grouped_ad_ids?.[0] || ''}`
 
               return (
                 <tr
-                  key={`${displayCreativeName}-${groupedAdIds[0] || creative.ad_id || index}`}
-                  className="hover:bg-white/5 transition-colors"
+                  key={rowKey}
+                  className={isWinner ? 'bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors' : 'hover:bg-white/5 transition-colors'}
                 >
                   <td className="py-3 pr-4">
-                    {index < 3 ? (
+                    {isWinner ? (
+                      <Trophy className="w-4 h-4 text-emerald-300" />
+                    ) : index < 3 ? (
                       <Trophy className={`w-4 h-4 ${getMedalColor(index)}`} />
                     ) : (
                       <span className="text-white/40">{index + 1}</span>
@@ -431,6 +470,13 @@ export function CreativesTable({
                         <div className="font-medium leading-snug break-words" title={displayCreativeName}>
                           {displayCreativeName}
                         </div>
+                        {isWinner && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
+                              Vencedor
+                            </span>
+                          </div>
+                        )}
                         {shortPrimaryAdId && (
                           <div className="text-[11px] text-white/35 mt-1" title={primaryAdId}>
                             ID {shortPrimaryAdId}
