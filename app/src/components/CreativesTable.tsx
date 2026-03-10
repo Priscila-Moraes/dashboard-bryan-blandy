@@ -141,10 +141,8 @@ export function CreativesTable({
         { key: 'conversions', label: viewLabel },
         { key: 'spend', label: 'Gasto' },
         { key: 'impressions', label: 'Impressões' },
-        { key: 'video_25_pct', label: '25%' },
         { key: 'video_50_pct', label: '50%' },
         { key: 'video_75_pct', label: '75%' },
-        { key: 'video_95_pct', label: '95%' },
         { key: 'cost_per', label: 'Custo/TP' },
       ]
     : [
@@ -311,11 +309,9 @@ export function CreativesTable({
               {isVideoView ? (
                 <>
                   <th className="pb-3 pr-4 text-right">ThruPlays</th>
-                  <th className="pb-3 pr-4 text-right">25%</th>
+                  <th className="pb-3 pr-4 text-right">Custo/TP</th>
                   <th className="pb-3 pr-4 text-right">50%</th>
                   <th className="pb-3 pr-4 text-right">75%</th>
-                  <th className="pb-3 pr-4 text-right">95%</th>
-                  <th className="pb-3 pr-4 text-right">Custo/TP</th>
                 </>
               ) : isSales ? (
                 <>
@@ -461,10 +457,6 @@ export function CreativesTable({
                           {formatNumber(conversions)}
                         </span>
                       </td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_25_pct || 0)}</td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_50_pct || 0)}</td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_75_pct || 0)}</td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_95_pct || 0)}</td>
                       <td className="py-3 pr-4 text-right">
                         {costPerConversion > 0 ? (
                           <span className="text-yellow-400">{formatCurrency(costPerConversion)}</span>
@@ -472,6 +464,8 @@ export function CreativesTable({
                           <span className="text-white/30">—</span>
                         )}
                       </td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_50_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_75_pct || 0)}</td>
                     </>
                   ) : (
                     <>

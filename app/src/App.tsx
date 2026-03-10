@@ -397,7 +397,9 @@ export default function App() {
 
                 {/* Funnel */}
                 <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                  <h3 className="text-sm font-medium text-white/60 mb-4">Funil de Conversão</h3>
+                  <h3 className="text-sm font-medium text-white/60 mb-4">
+                    {isVideoViewProduct ? 'Consumo de Video' : 'Funil de Conversão'}
+                  </h3>
                   <Funnel
                     impressions={metrics.impressions}
                     clicks={isVideoViewProduct ? metrics.thruplays : metrics.linkClicks}
@@ -459,14 +461,14 @@ export default function App() {
                         color="yellow"
                       />
                       <MetricCard
-                        label="25% do video"
-                        value={formatNumber(metrics.video25Pct)}
+                        label="ThruPlay Rate"
+                        value={formatPercent(metrics.impressions > 0 ? (metrics.thruplays / metrics.impressions) * 100 : 0)}
                         icon={<Percent className="w-5 h-5" />}
                         color="blue"
                       />
                       <MetricCard
-                        label="95% do video"
-                        value={formatNumber(metrics.video95Pct)}
+                        label="75% do video"
+                        value={formatNumber(metrics.video75Pct)}
                         icon={<TrendingUp className="w-5 h-5" />}
                         color="purple"
                       />

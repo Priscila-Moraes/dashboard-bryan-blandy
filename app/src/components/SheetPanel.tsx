@@ -42,6 +42,7 @@ export function SheetPanel({
 }: SheetPanelProps) {
   if (isVideoView) {
     const costPerThruplay = thruplays > 0 ? spend / thruplays : 0
+    const thruplayRate = impressions > 0 ? (thruplays / impressions) * 100 : 0
     const quartiles = [
       { label: '25% do video', value: video25Pct },
       { label: '50% do video', value: video50Pct },
@@ -65,6 +66,19 @@ export function SheetPanel({
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
             <div className="text-xs text-blue-400/80 uppercase tracking-wide mb-1">Custo/TP</div>
             <div className="text-2xl font-bold text-blue-400">{costPerThruplay > 0 ? formatCurrency(costPerThruplay) : '—'}</div>
+          </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-white/60 uppercase tracking-wide">ThruPlay Rate</div>
+            <span className="font-semibold text-green-400">{formatPercent(thruplayRate)}</span>
+          </div>
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-cyan-500 to-green-500 rounded-full"
+              style={{ width: `${Math.min(thruplayRate, 100)}%` }}
+            />
           </div>
         </div>
 
