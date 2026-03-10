@@ -6,6 +6,8 @@ interface FunnelProps {
   pageViews: number
   conversions: number
   conversionLabel: string
+  clicksLabel?: string
+  pageViewsLabel?: string
   secondaryConversions?: number
   secondaryConversionLabel?: string
   hidePageViews?: boolean
@@ -17,6 +19,8 @@ export function Funnel({
   pageViews,
   conversions,
   conversionLabel,
+  clicksLabel,
+  pageViewsLabel,
   secondaryConversions,
   secondaryConversionLabel,
   hidePageViews,
@@ -28,8 +32,8 @@ export function Funnel({
 
   const allSteps = [
     { label: 'Impressões', value: impressions, color: 'from-blue-500 to-blue-600', hidden: false },
-    { label: 'Cliques', value: clicks, color: 'from-cyan-500 to-cyan-600', hidden: false },
-    { label: 'Page Views', value: pageViews, color: 'from-teal-500 to-teal-600', hidden: hidePageViews },
+    { label: clicksLabel || 'Cliques', value: clicks, color: 'from-cyan-500 to-cyan-600', hidden: false },
+    { label: pageViewsLabel || 'Page Views', value: pageViews, color: 'from-teal-500 to-teal-600', hidden: hidePageViews },
     {
       label: secondaryConversionLabel || 'Leads',
       value: secondaryConversions || 0,

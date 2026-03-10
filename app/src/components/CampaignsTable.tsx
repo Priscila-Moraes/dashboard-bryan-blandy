@@ -1,9 +1,21 @@
 import { useState } from 'react'
 import { ArrowUpDown } from 'lucide-react'
-import { formatCurrency, formatPercent } from '../lib/utils'
+import { formatCurrency, formatNumber, formatPercent } from '../lib/utils'
 import type { AggregatedCampaign } from '../lib/supabase'
 
-type SortKey = 'conversions' | 'spend' | 'clicks' | 'cpc' | 'load_rate' | 'cost_per' | 'ctr'
+type SortKey =
+  | 'conversions'
+  | 'spend'
+  | 'impressions'
+  | 'clicks'
+  | 'cpc'
+  | 'load_rate'
+  | 'cost_per'
+  | 'ctr'
+  | 'video_25_pct'
+  | 'video_50_pct'
+  | 'video_75_pct'
+  | 'video_95_pct'
 
 interface SortOption {
   key: SortKey
@@ -13,30 +25,43 @@ interface SortOption {
 interface CampaignsTableProps {
   data: AggregatedCampaign[]
   isSales: boolean
+  isVideoView?: boolean
   isMqlPrimary?: boolean
 }
 
-export function CampaignsTable({ data, isSales, isMqlPrimary = false }: CampaignsTableProps) {
+export function CampaignsTable({ data, isSales, isVideoView = false, isMqlPrimary = false }: CampaignsTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('spend')
 
   if (!data || data.length === 0) {
     return <div className="text-center py-8 text-white/40">Sem dados de campanhas para o período</div>
   }
 
-  const conversionLabel = isSales ? 'Vendas' : isMqlPrimary ? 'MQLs' : 'Leads'
-  const costLabel = isSales ? 'CPA' : isMqlPrimary ? 'Custo/MQL' : 'CPL'
+  const conversionLabel = isVideoView ? 'ThruPlays' : isSales ? 'Vendas' : isMqlPrimary ? 'MQLs' : 'Leads'
+  const costLabel = isVideoView ? 'Custo/TP' : isSales ? 'CPA' : isMqlPrimary ? 'Custo/MQL' : 'CPL'
 
-  const sortOptions: SortOption[] = [
-    { key: 'spend', label: 'Gasto' },
-    { key: 'conversions', label: conversionLabel },
-    { key: 'clicks', label: 'Cliques' },
-    { key: 'load_rate', label: 'Taxa Carreg.' },
-    { key: 'cpc', label: 'CPC' },
-    { key: 'cost_per', label: costLabel },
-    { key: 'ctr', label: 'CTR' },
-  ]
+  const sortOptions: SortOption[] = isVideoView
+    ? [
+        { key: 'spend', label: 'Gasto' },
+        { key: 'impressions', label: 'Impressões' },
+        { key: 'conversions', label: conversionLabel },
+        { key: 'video_25_pct', label: '25%' },
+        { key: 'video_50_pct', label: '50%' },
+        { key: 'video_75_pct', label: '75%' },
+        { key: 'video_95_pct', label: '95%' },
+        { key: 'cost_per', label: costLabel },
+      ]
+    : [
+        { key: 'spend', label: 'Gasto' },
+        { key: 'conversions', label: conversionLabel },
+        { key: 'clicks', label: 'Cliques' },
+        { key: 'load_rate', label: 'Taxa Carreg.' },
+        { key: 'cpc', label: 'CPC' },
+        { key: 'cost_per', label: costLabel },
+        { key: 'ctr', label: 'CTR' },
+      ]
 
   const getConversions = (campaign: AggregatedCampaign) => {
+    if (isVideoView) return campaign.thruplays || 0
     if (isSales) return campaign.sheetPurchases > 0 ? campaign.sheetPurchases : campaign.purchases
     if (isMqlPrimary) return campaign.sheetMqls || 0
     return campaign.sheetLeadsUtm > 0 ? campaign.sheetLeadsUtm : campaign.leads
@@ -53,6 +78,8 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
         return getConversions(campaign)
       case 'spend':
         return campaign.spend || 0
+      case 'impressions':
+        return campaign.impressions || 0
       case 'clicks':
         return campaign.link_clicks || 0
       case 'load_rate':
@@ -63,6 +90,14 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
         return getCostPer(campaign)
       case 'ctr':
         return campaign.ctr || 0
+      case 'video_25_pct':
+        return campaign.video_25_pct || 0
+      case 'video_50_pct':
+        return campaign.video_50_pct || 0
+      case 'video_75_pct':
+        return campaign.video_75_pct || 0
+      case 'video_95_pct':
+        return campaign.video_95_pct || 0
       default:
         return 0
     }
@@ -113,12 +148,26 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
               <th className="pb-3 pr-4">#</th>
               <th className="pb-3 pr-4">Campanha</th>
               <th className="pb-3 pr-4 text-right">Gasto</th>
-              <th className="pb-3 pr-4 text-right">Cliques</th>
-              <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>
-              <th className="pb-3 pr-4 text-right">CPC</th>
-              <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
-              <th className="pb-3 pr-4 text-right">{costLabel}</th>
-              <th className="pb-3 pr-4 text-right">CTR</th>
+              {isVideoView ? (
+                <>
+                  <th className="pb-3 pr-4 text-right">Impressões</th>
+                  <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
+                  <th className="pb-3 pr-4 text-right">25%</th>
+                  <th className="pb-3 pr-4 text-right">50%</th>
+                  <th className="pb-3 pr-4 text-right">75%</th>
+                  <th className="pb-3 pr-4 text-right">95%</th>
+                  <th className="pb-3 pr-4 text-right">{costLabel}</th>
+                </>
+              ) : (
+                <>
+                  <th className="pb-3 pr-4 text-right">Cliques</th>
+                  <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>
+                  <th className="pb-3 pr-4 text-right">CPC</th>
+                  <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
+                  <th className="pb-3 pr-4 text-right">{costLabel}</th>
+                  <th className="pb-3 pr-4 text-right">CTR</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -135,29 +184,53 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
                     </div>
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.spend)}</td>
-                  <td className="py-3 pr-4 text-right text-white/80">{campaign.link_clicks}</td>
-                  <td className="py-3 pr-4 text-right">
-                    {campaign.load_rate !== null ? (
-                      <span className="text-cyan-300">{formatPercent(campaign.load_rate)}</span>
-                    ) : (
-                      <span className="text-white/30">—</span>
-                    )}
-                  </td>
-                  <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.cpc)}</td>
-                  <td className="py-3 pr-4 text-right">
-                    <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
-                    {isSales && (
-                      <div className="text-[11px] text-white/35 mt-0.5">Meta: {campaign.purchases || 0}</div>
-                    )}
-                  </td>
-                  <td className="py-3 pr-4 text-right">
-                    {costPer > 0 ? (
-                      <span className="text-yellow-300">{formatCurrency(costPer)}</span>
-                    ) : (
-                      <span className="text-white/30">—</span>
-                    )}
-                  </td>
-                  <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(campaign.ctr)}</td>
+                  {isVideoView ? (
+                    <>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.impressions || 0)}</td>
+                      <td className="py-3 pr-4 text-right">
+                        <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>
+                          {formatNumber(conversions)}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_25_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_50_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_75_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_95_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right">
+                        {costPer > 0 ? (
+                          <span className="text-yellow-300">{formatCurrency(costPer)}</span>
+                        ) : (
+                          <span className="text-white/30">—</span>
+                        )}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-3 pr-4 text-right text-white/80">{campaign.link_clicks}</td>
+                      <td className="py-3 pr-4 text-right">
+                        {campaign.load_rate !== null ? (
+                          <span className="text-cyan-300">{formatPercent(campaign.load_rate)}</span>
+                        ) : (
+                          <span className="text-white/30">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.cpc)}</td>
+                      <td className="py-3 pr-4 text-right">
+                        <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
+                        {isSales && (
+                          <div className="text-[11px] text-white/35 mt-0.5">Meta: {campaign.purchases || 0}</div>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 text-right">
+                        {costPer > 0 ? (
+                          <span className="text-yellow-300">{formatCurrency(costPer)}</span>
+                        ) : (
+                          <span className="text-white/30">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(campaign.ctr)}</td>
+                    </>
+                  )}
                 </tr>
               )
             })}

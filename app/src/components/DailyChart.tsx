@@ -15,10 +15,11 @@ import type { DailySummary } from '../lib/supabase'
 interface DailyChartProps {
   data: DailySummary[]
   isSales: boolean
+  isVideoView?: boolean
   isMqlPrimary?: boolean
 }
 
-export function DailyChart({ data, isSales, isMqlPrimary = false }: DailyChartProps) {
+export function DailyChart({ data, isSales, isVideoView = false, isMqlPrimary = false }: DailyChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center text-white/40">
@@ -31,7 +32,9 @@ export function DailyChart({ data, isSales, isMqlPrimary = false }: DailyChartPr
     dateFormatted: formatDate(d.date),
     date: d.date,
     spend: d.total_spend || 0,
-    conversions: isSales
+    conversions: isVideoView
+      ? d.total_thruplays || 0
+      : isSales
       ? d.sheet_sales || 0
       : isMqlPrimary
         ? d.sheet_mqls || 0
@@ -45,7 +48,7 @@ export function DailyChart({ data, isSales, isMqlPrimary = false }: DailyChartPr
     revenue: d.sheet_revenue || 0,
   }))
 
-  const conversionLabel = isSales ? 'Vendas' : isMqlPrimary ? 'MQLs' : 'Leads'
+  const conversionLabel = isVideoView ? 'ThruPlays' : isSales ? 'Vendas' : isMqlPrimary ? 'MQLs' : 'Leads'
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -146,7 +149,7 @@ export function DailyChart({ data, isSales, isMqlPrimary = false }: DailyChartPr
           fill="url(#colorConversions)"
         />
 
-        {!isSales && isMqlPrimary && (
+        {!isVideoView && !isSales && isMqlPrimary && (
           <Line
             yAxisId="right"
             type="monotone"

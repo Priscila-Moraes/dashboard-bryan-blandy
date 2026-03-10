@@ -53,6 +53,7 @@ export default function App() {
   const isSalesProduct = currentProduct?.type === 'sales'
   const isNativeForm = selectedProduct === 'formulario-aplicacao'
   const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedProduct)
+  const isVideoViewProduct = selectedProduct === 'engajamento-video-view'
   const campaignPatterns = CAMPAIGN_PATTERN_BY_PRODUCT[selectedProduct] || []
   const usesCampaignPattern = campaignPatterns.length > 0
 
@@ -84,7 +85,7 @@ export default function App() {
       }
 
       // Buscar metricas agregadas do daily_summary
-      const data = usesCampaignPattern
+      const data = usesCampaignPattern && !isVideoViewProduct
         ? null
         : await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
       setLatestAvailableDate(null)
@@ -105,6 +106,11 @@ export default function App() {
             spend: number
             impressions: number
             linkClicks: number
+            thruplays: number
+            video25Pct: number
+            video50Pct: number
+            video75Pct: number
+            video95Pct: number
             leads: number
             purchases: number
             sheetLeadsUtm: number
@@ -121,6 +127,11 @@ export default function App() {
               spend: 0,
               impressions: 0,
               linkClicks: 0,
+              thruplays: 0,
+              video25Pct: 0,
+              video50Pct: 0,
+              video75Pct: 0,
+              video95Pct: 0,
               leads: 0,
               purchases: 0,
               sheetLeadsUtm: 0,
@@ -129,6 +140,11 @@ export default function App() {
           cur.spend += c.spend || 0
           cur.impressions += c.impressions || 0
           cur.linkClicks += c.link_clicks || 0
+          cur.thruplays += c.thruplays || 0
+          cur.video25Pct += c.video_25_pct || 0
+          cur.video50Pct += c.video_50_pct || 0
+          cur.video75Pct += c.video_75_pct || 0
+          cur.video95Pct += c.video_95_pct || 0
           cur.leads += c.leads || 0
           cur.purchases += c.purchases || 0
           cur.sheetLeadsUtm += c.sheet_leads_utm || 0
@@ -154,6 +170,11 @@ export default function App() {
               total_impressions: d.impressions,
               total_link_clicks: d.linkClicks,
               total_page_views: 0,
+              total_thruplays: d.thruplays,
+              total_video_25_pct: d.video25Pct,
+              total_video_50_pct: d.video50Pct,
+              total_video_75_pct: d.video75Pct,
+              total_video_95_pct: d.video95Pct,
               total_leads: d.leads,
               total_purchases: d.purchases,
               total_revenue: 0,
@@ -178,6 +199,11 @@ export default function App() {
             impressions: acc.impressions + (day.total_impressions || 0),
             linkClicks: acc.linkClicks + (day.total_link_clicks || 0),
             pageViews: acc.pageViews + (day.total_page_views || 0),
+            thruplays: acc.thruplays + (day.total_thruplays || 0),
+            video25Pct: acc.video25Pct + (day.total_video_25_pct || 0),
+            video50Pct: acc.video50Pct + (day.total_video_50_pct || 0),
+            video75Pct: acc.video75Pct + (day.total_video_75_pct || 0),
+            video95Pct: acc.video95Pct + (day.total_video_95_pct || 0),
             leads: acc.leads + (day.total_leads || 0),
             purchases: acc.purchases + (day.total_purchases || 0),
             revenue: acc.revenue + (day.total_revenue || 0),
@@ -191,6 +217,11 @@ export default function App() {
             impressions: 0,
             linkClicks: 0,
             pageViews: 0,
+            thruplays: 0,
+            video25Pct: 0,
+            video50Pct: 0,
+            video75Pct: 0,
+            video95Pct: 0,
             leads: 0,
             purchases: 0,
             revenue: 0,
@@ -232,7 +263,7 @@ export default function App() {
         setDailyData([])
 
         // Ajuda a diagnosticar quando o range esta “vazio” porque o sync ainda nao gravou os dias recentes.
-        const latest = usesCampaignPattern ? null : await getLatestDailySummaryDate(selectedProduct)
+        const latest = usesCampaignPattern && !isVideoViewProduct ? null : await getLatestDailySummaryDate(selectedProduct)
         setLatestAvailableDate(latest)
       }
 
@@ -353,7 +384,8 @@ export default function App() {
           <div className="grid grid-cols-12 gap-6">
             {usingCreativesFallback && (
               <div className="col-span-12 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-sm text-yellow-200/90">
-                Dados de hoje/ontem ainda não foram gravados no <span className="text-yellow-100 font-semibold">daily_summary</span>. Exibindo gasto/cliques/leads a partir de <span className="text-yellow-100 font-semibold">ad_creatives</span> (parcial).
+                Dados de hoje/ontem ainda não foram gravados no <span className="text-yellow-100 font-semibold">daily_summary</span>. Exibindo{' '}
+                {isVideoViewProduct ? 'gasto/thruplays/retenção' : 'gasto/cliques/leads'} a partir de <span className="text-yellow-100 font-semibold">ad_creatives</span> (parcial).
               </div>
             )}
 
@@ -368,113 +400,166 @@ export default function App() {
                   <h3 className="text-sm font-medium text-white/60 mb-4">Funil de Conversão</h3>
                   <Funnel
                     impressions={metrics.impressions}
-                    clicks={metrics.linkClicks}
-                    pageViews={metrics.pageViews}
+                    clicks={isVideoViewProduct ? metrics.thruplays : metrics.linkClicks}
+                    pageViews={isVideoViewProduct ? metrics.video50Pct : metrics.pageViews}
                     conversions={
-                      isSalesProduct
+                      isVideoViewProduct
+                        ? metrics.video95Pct
+                        : isSalesProduct
                         ? metrics.sheetSales
                         : (isMqlPrimaryProduct
                           ? metrics.sheetMqls
                           : (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads))
                     }
-                    conversionLabel={isSalesProduct ? 'Vendas' : (isMqlPrimaryProduct ? 'MQLs' : 'Leads')}
+                    conversionLabel={
+                      isVideoViewProduct ? '95% do video' : isSalesProduct ? 'Vendas' : (isMqlPrimaryProduct ? 'MQLs' : 'Leads')
+                    }
+                    clicksLabel={isVideoViewProduct ? 'ThruPlays' : undefined}
+                    pageViewsLabel={isVideoViewProduct ? '50% do video' : undefined}
                     secondaryConversions={
-                      !isSalesProduct && isMqlPrimaryProduct
+                      isVideoViewProduct
+                        ? metrics.video75Pct
+                        : !isSalesProduct && isMqlPrimaryProduct
                         ? (metrics.sheetLeads > 0 ? metrics.sheetLeads : metrics.leads)
                         : undefined
                     }
-                    secondaryConversionLabel={!isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined}
+                    secondaryConversionLabel={
+                      isVideoViewProduct ? '75% do video' : !isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined
+                    }
                     hidePageViews={isNativeForm}
                   />
                 </div>
 
                 {/* Key Metrics Grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  <MetricCard
-                    label="Investimento"
-                    value={formatCurrency(metrics.spend)}
-                    icon={<DollarSign className="w-5 h-5" />}
-                    color="blue"
-                  />
-                  <MetricCard
-                    label="CPM"
-                    value={formatCurrency(metrics.cpm)}
-                    icon={<Eye className="w-5 h-5" />}
-                    color="gray"
-                  />
-                  <MetricCard
-                    label="CTR"
-                    value={formatPercent(metrics.ctr)}
-                    icon={<MousePointer className="w-5 h-5" />}
-                    color="blue"
-                  />
-                  {isNativeForm ? (
-                    <MetricCard
-                      label="CPC"
-                      value={formatCurrency(metrics.cpc)}
-                      icon={<MousePointer className="w-5 h-5" />}
-                      color="yellow"
-                    />
+                  {isVideoViewProduct ? (
+                    <>
+                      <MetricCard
+                        label="Investimento"
+                        value={formatCurrency(metrics.spend)}
+                        icon={<DollarSign className="w-5 h-5" />}
+                        color="blue"
+                      />
+                      <MetricCard
+                        label="CPM"
+                        value={formatCurrency(metrics.cpm)}
+                        icon={<Eye className="w-5 h-5" />}
+                        color="gray"
+                      />
+                      <MetricCard
+                        label="ThruPlays"
+                        value={formatNumber(metrics.thruplays)}
+                        icon={<Target className="w-5 h-5" />}
+                        color="green"
+                      />
+                      <MetricCard
+                        label="Custo/TP"
+                        value={metrics.thruplays > 0 ? formatCurrency(metrics.spend / metrics.thruplays) : '—'}
+                        icon={<Users className="w-5 h-5" />}
+                        color="yellow"
+                      />
+                      <MetricCard
+                        label="25% do video"
+                        value={formatNumber(metrics.video25Pct)}
+                        icon={<Percent className="w-5 h-5" />}
+                        color="blue"
+                      />
+                      <MetricCard
+                        label="95% do video"
+                        value={formatNumber(metrics.video95Pct)}
+                        icon={<TrendingUp className="w-5 h-5" />}
+                        color="purple"
+                      />
+                    </>
                   ) : (
-                    <MetricCard
-                      label="Taxa Carreg."
-                      value={formatPercent(metrics.loadRate)}
-                      icon={<FileText className="w-5 h-5" />}
-                      color="yellow"
-                    />
+                    <>
+                      <MetricCard
+                        label="Investimento"
+                        value={formatCurrency(metrics.spend)}
+                        icon={<DollarSign className="w-5 h-5" />}
+                        color="blue"
+                      />
+                      <MetricCard
+                        label="CPM"
+                        value={formatCurrency(metrics.cpm)}
+                        icon={<Eye className="w-5 h-5" />}
+                        color="gray"
+                      />
+                      <MetricCard
+                        label="CTR"
+                        value={formatPercent(metrics.ctr)}
+                        icon={<MousePointer className="w-5 h-5" />}
+                        color="blue"
+                      />
+                      {isNativeForm ? (
+                        <MetricCard
+                          label="CPC"
+                          value={formatCurrency(metrics.cpc)}
+                          icon={<MousePointer className="w-5 h-5" />}
+                          color="yellow"
+                        />
+                      ) : (
+                        <MetricCard
+                          label="Taxa Carreg."
+                          value={formatPercent(metrics.loadRate)}
+                          icon={<FileText className="w-5 h-5" />}
+                          color="yellow"
+                        />
+                      )}
+                      {isSalesProduct ? (
+                        <>
+                          <MetricCard
+                            label="CPA"
+                            value={formatCurrency(metrics.cpa)}
+                            icon={<ShoppingCart className="w-5 h-5" />}
+                            color="green"
+                          />
+                          <MetricCard
+                            label="ROAS"
+                            value={`${metrics.roas.toFixed(2)}x`}
+                            icon={<TrendingUp className="w-5 h-5" />}
+                            color="purple"
+                          />
+                        </>
+                      ) : isMqlPrimaryProduct ? (
+                        <>
+                          <MetricCard
+                            label="MQLs"
+                            value={formatNumber(metrics.sheetMqls)}
+                            icon={<Target className="w-5 h-5" />}
+                            color="green"
+                          />
+                          <MetricCard
+                            label="Custo/MQL"
+                            value={metrics.sheetMqls > 0 ? formatCurrency(metrics.spend / metrics.sheetMqls) : '—'}
+                            icon={<Users className="w-5 h-5" />}
+                            color="green"
+                          />
+                          <MetricCard
+                            label="Taxa MQL"
+                            value={formatPercent(metrics.mqlRate)}
+                            icon={<Percent className="w-5 h-5" />}
+                            color="purple"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <MetricCard
+                            label="Custo/MQL"
+                            value={metrics.sheetMqls > 0 ? formatCurrency(metrics.spend / metrics.sheetMqls) : '—'}
+                            icon={<Users className="w-5 h-5" />}
+                            color="green"
+                          />
+                          <MetricCard
+                            label="Taxa MQL"
+                            value={formatPercent(metrics.mqlRate)}
+                            icon={<Percent className="w-5 h-5" />}
+                            color="purple"
+                          />
+                        </>
+                      )}
+                    </>
                   )}
-{isSalesProduct ? (
-  <>
-    <MetricCard
-      label="CPA"
-      value={formatCurrency(metrics.cpa)}
-      icon={<ShoppingCart className="w-5 h-5" />}
-      color="green"
-    />
-    <MetricCard
-      label="ROAS"
-      value={`${metrics.roas.toFixed(2)}x`}
-      icon={<TrendingUp className="w-5 h-5" />}
-      color="purple"
-    />
-  </>
-) : isMqlPrimaryProduct ? (
-  <>
-    <MetricCard
-      label="MQLs"
-      value={formatNumber(metrics.sheetMqls)}
-      icon={<Target className="w-5 h-5" />}
-      color="green"
-    />
-    <MetricCard
-      label="Custo/MQL"
-      value={metrics.sheetMqls > 0 ? formatCurrency(metrics.spend / metrics.sheetMqls) : '—'}
-      icon={<Users className="w-5 h-5" />}
-      color="green"
-    />
-    <MetricCard
-      label="Taxa MQL"
-      value={formatPercent(metrics.mqlRate)}
-      icon={<Percent className="w-5 h-5" />}
-      color="purple"
-    />
-  </>
-) : (
-  <>
-    <MetricCard
-      label="Custo/MQL"
-      value={metrics.sheetMqls > 0 ? formatCurrency(metrics.spend / metrics.sheetMqls) : '—'}
-      icon={<Users className="w-5 h-5" />}
-      color="green"
-    />
-    <MetricCard
-      label="Taxa MQL"
-      value={formatPercent(metrics.mqlRate)}
-      icon={<Percent className="w-5 h-5" />}
-      color="purple"
-    />
-  </>
-)}
                 </div>
               </div>
 
@@ -487,6 +572,7 @@ export default function App() {
                 <DailyChart
                   data={dailyData}
                   isSales={isSalesProduct}
+                  isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
                 />
               </div>
@@ -500,6 +586,7 @@ export default function App() {
                 <CampaignsTable
                   data={campaigns}
                   isSales={isSalesProduct}
+                  isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
                 />
               </div>
@@ -512,6 +599,7 @@ export default function App() {
                 <CreativesTable
                   data={creatives}
                   isSales={isSalesProduct}
+                  isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
                   showMqlInSales={selectedProduct === 'fib-live'}
                   showDeliveryMetrics={selectedProduct === 'workshop-lancamento-simultaneo'}
@@ -536,6 +624,7 @@ export default function App() {
             <div className="col-span-12 lg:col-span-4 xl:col-span-3">
               <SheetPanel
                 isSales={isSalesProduct}
+                isVideoView={isVideoViewProduct}
                 isMqlPrimary={isMqlPrimaryProduct}
                 sales={metrics.sheetSales}
                 revenue={metrics.sheetRevenue}
@@ -545,6 +634,12 @@ export default function App() {
                 cpa={metrics.cpa}
                 roas={metrics.roas}
                 spend={metrics.spend}
+                impressions={metrics.impressions}
+                thruplays={metrics.thruplays}
+                video25Pct={metrics.video25Pct}
+                video50Pct={metrics.video50Pct}
+                video75Pct={metrics.video75Pct}
+                video95Pct={metrics.video95Pct}
               />
             </div>
           </div>

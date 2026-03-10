@@ -1,9 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { formatCurrency, formatPercent } from '../lib/utils'
+import { formatCurrency, formatNumber, formatPercent } from '../lib/utils'
 import { ExternalLink, Trophy, ArrowUpDown } from 'lucide-react'
 import type { AggregatedCreative } from '../lib/supabase'
 
-type SortKey = 'conversions' | 'spend' | 'impressions' | 'clicks' | 'load_rate' | 'cpc' | 'cost_per' | 'ctr'
+type SortKey =
+  | 'conversions'
+  | 'spend'
+  | 'impressions'
+  | 'clicks'
+  | 'load_rate'
+  | 'cpc'
+  | 'cost_per'
+  | 'ctr'
+  | 'video_25_pct'
+  | 'video_50_pct'
+  | 'video_75_pct'
+  | 'video_95_pct'
 type LeadsView = 'leads' | 'mql'
 
 interface SortOption {
@@ -28,6 +40,7 @@ const CREATIVE_NAME_OVERRIDES: Record<string, string> = {
 interface CreativesTableProps {
   data: AggregatedCreative[]
   isSales: boolean
+  isVideoView?: boolean
   isMqlPrimary?: boolean
   showMqlInSales?: boolean
   showDeliveryMetrics?: boolean
@@ -39,6 +52,7 @@ interface CreativesTableProps {
 export function CreativesTable({
   data,
   isSales,
+  isVideoView = false,
   isMqlPrimary = false,
   showMqlInSales = false,
   showDeliveryMetrics = false,
@@ -54,7 +68,7 @@ export function CreativesTable({
   })
 
   useEffect(() => {
-    if (isSales) return
+    if (isSales || isVideoView) return
     if (isMqlPrimary) {
       setLeadsView('mql')
       return
@@ -70,10 +84,21 @@ export function CreativesTable({
     return <div className="text-center py-8 text-white/40">Sem dados de criativos para o período</div>
   }
 
-  const viewLabel = isSales ? 'Vendas' : leadsView === 'mql' ? 'MQLs' : 'Leads'
+  const viewLabel = isVideoView ? 'ThruPlays' : isSales ? 'Vendas' : leadsView === 'mql' ? 'MQLs' : 'Leads'
 
   // Calcular conversões sem atribuição (diferença entre total da planilha e soma atribuída por ad_id)
   const totals = useMemo(() => {
+    if (isVideoView) {
+      return {
+        attributedSales: 0,
+        attributedLeads: 0,
+        attributedMqls: 0,
+        unattributedSales: 0,
+        unattributedLeads: 0,
+        unattributedMqls: 0,
+      }
+    }
+
     const attributedSales = data.reduce((sum, c) => sum + (c.sheetPurchases || 0), 0)
     const attributedLeads = data.reduce((sum, c) => sum + (c.sheetLeadsUtm || 0), 0)
     const attributedMqls = data.reduce((sum, c) => sum + (c.sheetMqls || 0), 0)
@@ -97,7 +122,7 @@ export function CreativesTable({
       unattributedLeads,
       unattributedMqls,
     }
-  }, [data, isSales, totalSheetLeads, totalSheetMqls, totalSheetSales])
+  }, [data, isSales, isVideoView, totalSheetLeads, totalSheetMqls, totalSheetSales])
 
   const unattributedConversions = isSales
     ? totals.unattributedSales
@@ -111,20 +136,31 @@ export function CreativesTable({
     ? totals.unattributedSales > 0 || unattributedMqlsInSales > 0
     : unattributedConversions > 0
 
-  const sortOptions: SortOption[] = [
-    { key: 'conversions', label: viewLabel },
-    { key: 'spend', label: 'Gasto' },
-    ...(showDeliveryMetrics
-      ? [
-          { key: 'impressions' as const, label: 'Impressões' },
-          { key: 'load_rate' as const, label: 'Taxa Carreg.' },
-        ]
-      : []),
-    { key: 'clicks', label: 'Cliques' },
-    { key: 'cpc', label: 'CPC' },
-    { key: 'cost_per', label: isSales ? 'CPA' : leadsView === 'mql' ? 'Custo/MQL' : 'CPL' },
-    { key: 'ctr', label: 'CTR' },
-  ]
+  const sortOptions: SortOption[] = isVideoView
+    ? [
+        { key: 'conversions', label: viewLabel },
+        { key: 'spend', label: 'Gasto' },
+        { key: 'impressions', label: 'Impressões' },
+        { key: 'video_25_pct', label: '25%' },
+        { key: 'video_50_pct', label: '50%' },
+        { key: 'video_75_pct', label: '75%' },
+        { key: 'video_95_pct', label: '95%' },
+        { key: 'cost_per', label: 'Custo/TP' },
+      ]
+    : [
+        { key: 'conversions', label: viewLabel },
+        { key: 'spend', label: 'Gasto' },
+        ...(showDeliveryMetrics
+          ? [
+              { key: 'impressions' as const, label: 'Impressões' },
+              { key: 'load_rate' as const, label: 'Taxa Carreg.' },
+            ]
+          : []),
+        { key: 'clicks', label: 'Cliques' },
+        { key: 'cpc', label: 'CPC' },
+        { key: 'cost_per', label: isSales ? 'CPA' : leadsView === 'mql' ? 'Custo/MQL' : 'CPL' },
+        { key: 'ctr', label: 'CTR' },
+      ]
 
   const getSortValue = (c: AggregatedCreative, key: SortKey): number => {
     const cpc = c.link_clicks > 0 ? c.spend / c.link_clicks : 0
@@ -132,8 +168,12 @@ export function CreativesTable({
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads || 0
     const realMqls = c.sheetMqls || 0
 
-    const conversions = isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
-    const costPer = isSales
+    const conversions = isVideoView ? c.thruplays || 0 : isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
+    const costPer = isVideoView
+      ? conversions > 0
+        ? c.spend / conversions
+        : 0
+      : isSales
       ? c.cpa || 0
       : leadsView === 'mql'
         ? conversions > 0
@@ -158,6 +198,14 @@ export function CreativesTable({
         return costPer
       case 'ctr':
         return c.ctr || 0
+      case 'video_25_pct':
+        return c.video_25_pct || 0
+      case 'video_50_pct':
+        return c.video_50_pct || 0
+      case 'video_75_pct':
+        return c.video_75_pct || 0
+      case 'video_95_pct':
+        return c.video_95_pct || 0
       default:
         return 0
     }
@@ -192,7 +240,7 @@ export function CreativesTable({
 
   return (
     <div>
-      {!isSales && (
+      {!isSales && !isVideoView && (
         <div className="flex items-center gap-2 mb-4">
           <div className="text-xs text-white/40">Visualização:</div>
           <div className="flex gap-1.5">
@@ -256,11 +304,20 @@ export function CreativesTable({
               <th className="pb-3 pr-4">#</th>
               <th className="pb-3 pr-4">Criativo</th>
               <th className="pb-3 pr-4 text-right">Gasto</th>
-              {showDeliveryMetrics && <th className="pb-3 pr-4 text-right">Impressões</th>}
-              <th className="pb-3 pr-4 text-right">Cliques</th>
-              {showDeliveryMetrics && <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>}
-              <th className="pb-3 pr-4 text-right">CPC</th>
-              {isSales ? (
+              {(showDeliveryMetrics || isVideoView) && <th className="pb-3 pr-4 text-right">Impressões</th>}
+              {!isVideoView && <th className="pb-3 pr-4 text-right">Cliques</th>}
+              {showDeliveryMetrics && !isVideoView && <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>}
+              {!isVideoView && <th className="pb-3 pr-4 text-right">CPC</th>}
+              {isVideoView ? (
+                <>
+                  <th className="pb-3 pr-4 text-right">ThruPlays</th>
+                  <th className="pb-3 pr-4 text-right">25%</th>
+                  <th className="pb-3 pr-4 text-right">50%</th>
+                  <th className="pb-3 pr-4 text-right">75%</th>
+                  <th className="pb-3 pr-4 text-right">95%</th>
+                  <th className="pb-3 pr-4 text-right">Custo/TP</th>
+                </>
+              ) : isSales ? (
                 <>
                   <th className="pb-3 pr-4 text-right">Vendas</th>
                   {showMqlInSales && <th className="pb-3 pr-4 text-right">MQLs</th>}
@@ -283,8 +340,12 @@ export function CreativesTable({
               const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases || 0
               const realLeads = creative.sheetLeadsUtm > 0 ? creative.sheetLeadsUtm : creative.leads || 0
               const realMqls = creative.sheetMqls || 0
-              const conversions = isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
-              const costPerConversion = isSales
+              const conversions = isVideoView ? creative.thruplays || 0 : isSales ? realPurchases : leadsView === 'mql' ? realMqls : realLeads
+              const costPerConversion = isVideoView
+                ? conversions > 0
+                  ? creative.spend / conversions
+                  : 0
+                : isSales
                 ? creative.cpa
                 : leadsView === 'mql'
                   ? conversions > 0
@@ -379,11 +440,11 @@ export function CreativesTable({
                     </div>
                   </td>
                   <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(creative.spend)}</td>
-                  {showDeliveryMetrics && (
-                    <td className="py-3 pr-4 text-right text-white/80">{creative.impressions.toLocaleString('pt-BR')}</td>
+                  {(showDeliveryMetrics || isVideoView) && (
+                    <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.impressions || 0)}</td>
                   )}
-                  <td className="py-3 pr-4 text-right text-white/80">{creative.link_clicks}</td>
-                  {showDeliveryMetrics && (
+                  {!isVideoView && <td className="py-3 pr-4 text-right text-white/80">{creative.link_clicks}</td>}
+                  {showDeliveryMetrics && !isVideoView && (
                     <td className="py-3 pr-4 text-right">
                       {creative.load_rate !== null ? (
                         <span className="text-cyan-300">{formatPercent(creative.load_rate)}</span>
@@ -392,60 +453,83 @@ export function CreativesTable({
                       )}
                     </td>
                   )}
-                  <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(cpc)}</td>
-                  <td className="py-3 pr-4 text-right">
-                    <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
-                    {!isSales && leadsView === 'mql' && (
-                      <div className="text-[11px] text-white/35 mt-0.5">{realLeads} leads</div>
-                    )}
-                  </td>
-                  {isSales && showMqlInSales && (
-                    <td className="py-3 pr-4 text-right">
-                      <span className={realMqls > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{realMqls}</span>
-                    </td>
-                  )}
-                  <td className="py-3 pr-4 text-right">
-                    {costPerConversion > 0 ? (
-                      <>
-                        <span
-                          className={
-                            costPerConversion < 500
-                              ? 'text-green-400'
-                              : costPerConversion > 1000
-                                ? 'text-red-400'
-                                : 'text-yellow-400'
-                          }
-                        >
-                          {formatCurrency(costPerConversion)}
+                  {!isVideoView && <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(cpc)}</td>}
+                  {isVideoView ? (
+                    <>
+                      <td className="py-3 pr-4 text-right">
+                        <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>
+                          {formatNumber(conversions)}
                         </span>
-                        {!isSales && leadsView === 'mql' && cplContext > 0 && (
-                          <div className="text-[11px] text-white/35 mt-0.5">CPL {formatCurrency(cplContext)}</div>
+                      </td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_25_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_50_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_75_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(creative.video_95_pct || 0)}</td>
+                      <td className="py-3 pr-4 text-right">
+                        {costPerConversion > 0 ? (
+                          <span className="text-yellow-400">{formatCurrency(costPerConversion)}</span>
+                        ) : (
+                          <span className="text-white/30">—</span>
                         )}
-                      </>
-                    ) : (
-                      <span className="text-white/30">—</span>
-                    )}
-                  </td>
-                  {isSales && showMqlInSales && (
-                    <td className="py-3 pr-4 text-right">
-                      {costPerMql > 0 ? (
-                        <span
-                          className={
-                            costPerMql < 500
-                              ? 'text-green-400'
-                              : costPerMql > 1000
-                                ? 'text-red-400'
-                                : 'text-yellow-400'
-                          }
-                        >
-                          {formatCurrency(costPerMql)}
-                        </span>
-                      ) : (
-                        <span className="text-white/30">—</span>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-3 pr-4 text-right">
+                        <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
+                        {!isSales && leadsView === 'mql' && (
+                          <div className="text-[11px] text-white/35 mt-0.5">{realLeads} leads</div>
+                        )}
+                      </td>
+                      {isSales && showMqlInSales && (
+                        <td className="py-3 pr-4 text-right">
+                          <span className={realMqls > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{realMqls}</span>
+                        </td>
                       )}
-                    </td>
+                      <td className="py-3 pr-4 text-right">
+                        {costPerConversion > 0 ? (
+                          <>
+                            <span
+                              className={
+                                costPerConversion < 500
+                                  ? 'text-green-400'
+                                  : costPerConversion > 1000
+                                    ? 'text-red-400'
+                                    : 'text-yellow-400'
+                              }
+                            >
+                              {formatCurrency(costPerConversion)}
+                            </span>
+                            {!isSales && leadsView === 'mql' && cplContext > 0 && (
+                              <div className="text-[11px] text-white/35 mt-0.5">CPL {formatCurrency(cplContext)}</div>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-white/30">—</span>
+                        )}
+                      </td>
+                      {isSales && showMqlInSales && (
+                        <td className="py-3 pr-4 text-right">
+                          {costPerMql > 0 ? (
+                            <span
+                              className={
+                                costPerMql < 500
+                                  ? 'text-green-400'
+                                  : costPerMql > 1000
+                                    ? 'text-red-400'
+                                    : 'text-yellow-400'
+                              }
+                            >
+                              {formatCurrency(costPerMql)}
+                            </span>
+                          ) : (
+                            <span className="text-white/30">—</span>
+                          )}
+                        </td>
+                      )}
+                      <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(creative.ctr)}</td>
+                    </>
                   )}
-                  <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(creative.ctr)}</td>
                   <td className="py-3 text-center">
                     {creativeLink ? (
                       <a
@@ -465,7 +549,7 @@ export function CreativesTable({
             })}
 
 
-            {showUnattributedRow && (
+            {!isVideoView && showUnattributedRow && (
               <tr className="bg-yellow-500/5">
                 <td className="py-3 pr-4">
                   <span className="text-yellow-400 font-semibold">!</span>
