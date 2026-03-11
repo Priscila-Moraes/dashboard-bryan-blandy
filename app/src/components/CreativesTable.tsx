@@ -73,6 +73,7 @@ interface CreativesTableProps {
   isMqlPrimary?: boolean
   showMqlInSales?: boolean
   showDeliveryMetrics?: boolean
+  subtitleMode?: 'campaign' | 'adset'
   totalSheetSales?: number
   totalSheetLeads?: number
   totalSheetMqls?: number
@@ -85,6 +86,7 @@ export function CreativesTable({
   isMqlPrimary = false,
   showMqlInSales = false,
   showDeliveryMetrics = false,
+  subtitleMode = 'campaign',
   totalSheetSales,
   totalSheetLeads,
   totalSheetMqls,
@@ -532,7 +534,7 @@ export function CreativesTable({
                         </span>
                       )}
                     </div>
-                    {isVideoView ? (
+                    {isVideoView || subtitleMode === 'adset' ? (
                       <div className="text-xs text-white/25 truncate max-w-[200px]" title={creative.adset_name}>
                         {creative.adset_name}
                       </div>

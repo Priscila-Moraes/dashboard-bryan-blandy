@@ -661,6 +661,7 @@ export default function App() {
                   isMqlPrimary={isMqlPrimaryProduct}
                   showMqlInSales={selectedProduct === 'fib-live'}
                   showDeliveryMetrics={selectedProduct === 'workshop-lancamento-simultaneo'}
+                  subtitleMode={selectedProduct === 'formulario-aplicacao' ? 'adset' : 'campaign'}
                   totalSheetSales={metrics.sheetSales}
                   totalSheetLeads={metrics.sheetLeads}
                   totalSheetMqls={metrics.sheetMqls}
