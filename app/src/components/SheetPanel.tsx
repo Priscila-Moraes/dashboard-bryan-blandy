@@ -16,6 +16,17 @@ const VIDEO_METRIC_HELP = {
   completionRate: '% de pessoas que assistiram o vídeo quase até o final.',
 } as const
 
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex items-center">
+      <CircleHelp className="h-3.5 w-3.5 cursor-help text-white/35" aria-label={text} />
+      <span className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-56 rounded-lg border border-white/10 bg-[#11131a] px-3 py-2 text-[11px] normal-case leading-relaxed text-white/80 shadow-xl group-hover:block">
+        {text}
+      </span>
+    </span>
+  )
+}
+
 interface SheetPanelProps {
   isSales: boolean
   isVideoView?: boolean
@@ -109,7 +120,7 @@ export function SheetPanel({
             <div>
               <div className="flex items-center gap-1 text-xs text-white/45 uppercase tracking-wide">
                 <span>Hook Rate</span>
-                <CircleHelp className="h-3.5 w-3.5 text-white/35" title={VIDEO_METRIC_HELP.hookRate} aria-label={VIDEO_METRIC_HELP.hookRate} />
+                <InfoTooltip text={VIDEO_METRIC_HELP.hookRate} />
               </div>
               <div className="text-[11px] text-white/35">3s Views / Impressões</div>
             </div>
@@ -120,7 +131,7 @@ export function SheetPanel({
             <div>
               <div className="flex items-center gap-1 text-xs text-white/45 uppercase tracking-wide">
                 <span>Hold Rate</span>
-                <CircleHelp className="h-3.5 w-3.5 text-white/35" title={VIDEO_METRIC_HELP.holdRate} aria-label={VIDEO_METRIC_HELP.holdRate} />
+                <InfoTooltip text={VIDEO_METRIC_HELP.holdRate} />
               </div>
               <div className="text-[11px] text-white/35">ThruPlays / 3s Views</div>
             </div>
@@ -131,7 +142,7 @@ export function SheetPanel({
             <div>
               <div className="flex items-center gap-1 text-xs text-white/45 uppercase tracking-wide">
                 <span>Completion Rate</span>
-                <CircleHelp className="h-3.5 w-3.5 text-white/35" title={VIDEO_METRIC_HELP.completionRate} aria-label={VIDEO_METRIC_HELP.completionRate} />
+                <InfoTooltip text={VIDEO_METRIC_HELP.completionRate} />
               </div>
               <div className="text-[11px] text-white/35">95% / Impressões</div>
             </div>

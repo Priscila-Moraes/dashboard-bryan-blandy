@@ -35,6 +35,17 @@ interface SortOption {
   title?: string
 }
 
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex items-center">
+      <CircleHelp className="h-3.5 w-3.5 cursor-help text-white/35" aria-label={text} />
+      <span className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-52 rounded-lg border border-white/10 bg-[#11131a] px-3 py-2 text-[11px] normal-case leading-relaxed text-white/80 shadow-xl group-hover:block">
+        {text}
+      </span>
+    </span>
+  )
+}
+
 const VIDEO_METRIC_HELP = {
   hook_rate: '% de pessoas que pararam o scroll e assistiram pelo menos 3 segundos do vídeo.',
   hold_rate: '% de pessoas que continuaram assistindo o vídeo após os primeiros segundos.',
@@ -373,21 +384,21 @@ export function CreativesTable({
                   <th className="pb-3 pr-4 text-right">50%</th>
                   <th className="pb-3 pr-4 text-right">75%</th>
                   <th className="pb-3 pr-4 text-right">
-                    <span className="inline-flex items-center justify-end gap-1" title={VIDEO_METRIC_HELP.hook_rate}>
+                    <span className="inline-flex items-center justify-end gap-1">
                       Hook Rate
-                      <CircleHelp className="h-3.5 w-3.5 text-white/35" aria-label={VIDEO_METRIC_HELP.hook_rate} />
+                      <InfoTooltip text={VIDEO_METRIC_HELP.hook_rate} />
                     </span>
                   </th>
                   <th className="pb-3 pr-4 text-right">
-                    <span className="inline-flex items-center justify-end gap-1" title={VIDEO_METRIC_HELP.hold_rate}>
+                    <span className="inline-flex items-center justify-end gap-1">
                       Hold Rate
-                      <CircleHelp className="h-3.5 w-3.5 text-white/35" aria-label={VIDEO_METRIC_HELP.hold_rate} />
+                      <InfoTooltip text={VIDEO_METRIC_HELP.hold_rate} />
                     </span>
                   </th>
                   <th className="pb-3 pr-4 text-right">
-                    <span className="inline-flex items-center justify-end gap-1" title={VIDEO_METRIC_HELP.completion_rate}>
+                    <span className="inline-flex items-center justify-end gap-1">
                       Completion Rate
-                      <CircleHelp className="h-3.5 w-3.5 text-white/35" aria-label={VIDEO_METRIC_HELP.completion_rate} />
+                      <InfoTooltip text={VIDEO_METRIC_HELP.completion_rate} />
                     </span>
                   </th>
                 </>
@@ -521,12 +532,13 @@ export function CreativesTable({
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-white/30 truncate max-w-[200px]" title={creative.campaign_name}>
-                      {creative.campaign_name}
-                    </div>
-                    {isVideoView && creative.adset_name && (
+                    {isVideoView ? (
                       <div className="text-xs text-white/25 truncate max-w-[200px]" title={creative.adset_name}>
                         {creative.adset_name}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-white/30 truncate max-w-[200px]" title={creative.campaign_name}>
+                        {creative.campaign_name}
                       </div>
                     )}
                   </td>
