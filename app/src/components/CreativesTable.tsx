@@ -37,9 +37,9 @@ interface SortOption {
 
 function InfoTooltip({ text }: { text: string }) {
   return (
-    <span className="group relative inline-flex items-center">
-      <CircleHelp className="h-3.5 w-3.5 cursor-help text-white/35" aria-label={text} />
-      <span className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-52 rounded-lg border border-white/10 bg-[#11131a] px-3 py-2 text-[11px] normal-case leading-relaxed text-white/80 shadow-xl group-hover:block">
+    <span className="group relative inline-flex items-center" title={text} tabIndex={0}>
+      <CircleHelp className="h-3.5 w-3.5 cursor-help text-white/35" aria-label={text} title={text} />
+      <span className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-52 rounded-lg border border-white/10 bg-[#11131a] px-3 py-2 text-[11px] normal-case leading-relaxed text-white/80 shadow-xl group-hover:block group-focus-within:block">
         {text}
       </span>
     </span>
