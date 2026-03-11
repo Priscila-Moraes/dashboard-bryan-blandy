@@ -109,6 +109,7 @@ export default function App() {
             spend: number
             impressions: number
             linkClicks: number
+            frequencyWeightedSum: number
             video3sViews: number
             thruplays: number
             video25Pct: number
@@ -131,6 +132,7 @@ export default function App() {
               spend: 0,
               impressions: 0,
               linkClicks: 0,
+              frequencyWeightedSum: 0,
               video3sViews: 0,
               thruplays: 0,
               video25Pct: 0,
@@ -145,6 +147,7 @@ export default function App() {
           cur.spend += c.spend || 0
           cur.impressions += c.impressions || 0
           cur.linkClicks += c.link_clicks || 0
+          cur.frequencyWeightedSum += (c.impressions || 0) * (c.frequency || 0)
           cur.video3sViews += c.video_3s_views || 0
           cur.thruplays += c.thruplays || 0
           cur.video25Pct += c.video_25_pct || 0
@@ -163,6 +166,7 @@ export default function App() {
           .map(([date, d]) => {
             const ctr = d.impressions > 0 ? (d.linkClicks / d.impressions) * 100 : 0
             const cpm = d.impressions > 0 ? (d.spend / d.impressions) * 1000 : 0
+            const frequency = d.impressions > 0 ? d.frequencyWeightedSum / d.impressions : 0
             const cpl = d.leads > 0 ? d.spend / d.leads : 0
             const mqlLeads = d.sheetLeadsUtm > 0 ? d.sheetLeadsUtm : d.leads
             const mqlRate = mqlLeads > 0 ? (d.sheetMqls / mqlLeads) * 100 : 0
@@ -176,6 +180,7 @@ export default function App() {
               total_impressions: d.impressions,
               total_link_clicks: d.linkClicks,
               total_page_views: 0,
+              frequency,
               total_video_3s_views: d.video3sViews,
               total_thruplays: d.thruplays,
               total_video_25_pct: d.video25Pct,
@@ -206,6 +211,7 @@ export default function App() {
             impressions: acc.impressions + (day.total_impressions || 0),
             linkClicks: acc.linkClicks + (day.total_link_clicks || 0),
             pageViews: acc.pageViews + (day.total_page_views || 0),
+            frequencyWeightedSum: acc.frequencyWeightedSum + ((day.total_impressions || 0) * (day.frequency || 0)),
             video3sViews: acc.video3sViews + (day.total_video_3s_views || 0),
             thruplays: acc.thruplays + (day.total_thruplays || 0),
             video25Pct: acc.video25Pct + (day.total_video_25_pct || 0),
@@ -225,6 +231,7 @@ export default function App() {
             impressions: 0,
             linkClicks: 0,
             pageViews: 0,
+            frequencyWeightedSum: 0,
             video3sViews: 0,
             thruplays: 0,
             video25Pct: 0,
@@ -242,6 +249,7 @@ export default function App() {
         )
 
         const cpm = totals.impressions > 0 ? (totals.spend / totals.impressions) * 1000 : 0
+        const frequency = totals.impressions > 0 ? totals.frequencyWeightedSum / totals.impressions : 0
         const ctr = totals.impressions > 0 ? (totals.linkClicks / totals.impressions) * 100 : 0
         const realLeads = totals.leads
         const cpl = realLeads > 0 ? totals.spend / realLeads : 0
@@ -252,6 +260,7 @@ export default function App() {
         setMetrics({
           ...totals,
           cpm,
+          frequency,
           ctr,
           cpl,
           cpc,
@@ -436,7 +445,7 @@ export default function App() {
                         : undefined
                     }
                     secondaryConversionLabel={
-                      isVideoViewProduct ? '50% do video' : !isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined
+                      isVideoViewProduct ? '50% do vídeo' : !isSalesProduct && isMqlPrimaryProduct ? 'Leads' : undefined
                     }
                     extraSteps={
                       isVideoViewProduct
@@ -470,22 +479,31 @@ export default function App() {
                         color="green"
                       />
                       <MetricCard
-                        label="Custo/TP"
-                        value={metrics.thruplays > 0 ? formatCurrency(calculateCostPer(metrics.spend, metrics.thruplays)) : '—'}
-                        icon={<Users className="w-5 h-5" />}
-                        color="yellow"
-                      />
-                      <MetricCard
                         label="ThruPlay Rate"
                         value={formatPercent(calculateThruplayRate(metrics.thruplays, metrics.impressions))}
                         icon={<Percent className="w-5 h-5" />}
                         color="blue"
                       />
                       <MetricCard
+                        label="Custo/TP"
+                        value={metrics.thruplays > 0 ? formatCurrency(calculateCostPer(metrics.spend, metrics.thruplays)) : '—'}
+                        icon={<Users className="w-5 h-5" />}
+                        color="yellow"
+                      />
+                      <MetricCard
                         label="75% do vídeo"
                         value={formatNumber(metrics.video75Pct)}
+                        helperText={`${formatPercent(metrics.impressions > 0 ? (metrics.video75Pct / metrics.impressions) * 100 : 0)} das impressões`}
                         icon={<TrendingUp className="w-5 h-5" />}
                         color="purple"
+                      />
+                      <MetricCard
+                        label="Frequência"
+                        value={metrics.frequency > 0 ? metrics.frequency.toFixed(2).replace('.', ',') + 'x' : '—'}
+                        helperText="média de exibições por pessoa"
+                        icon={<RefreshCw className="w-5 h-5" />}
+                        color="gray"
+                        className="col-span-2"
                       />
                     </>
                   ) : (

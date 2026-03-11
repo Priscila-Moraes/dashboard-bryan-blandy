@@ -47,8 +47,8 @@ function InfoTooltip({ text }: { text: string }) {
 }
 
 const VIDEO_METRIC_HELP = {
-  hook_rate: '% de pessoas que pararam o scroll e assistiram pelo menos 3 segundos do vídeo.',
-  hold_rate: '% de pessoas que continuaram assistindo o vídeo após os primeiros segundos.',
+  hook_rate: '% de pessoas que assistiram pelo menos 3 segundos do vídeo.',
+  hold_rate: '% de pessoas que continuaram assistindo após os primeiros segundos.',
   completion_rate: '% de pessoas que assistiram o vídeo quase até o final.',
 } as const
 
@@ -505,7 +505,7 @@ export function CreativesTable({
                         {isWinner && (
                           <div className="mt-1">
                             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
-                              Vencedor
+                              Melhor Criativo
                             </span>
                           </div>
                         )}

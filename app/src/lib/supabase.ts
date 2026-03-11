@@ -19,6 +19,7 @@ export interface DailySummary {
   total_impressions: number
   total_link_clicks: number
   total_page_views: number
+  frequency?: number
   total_video_3s_views?: number
   total_thruplays?: number
   total_video_25_pct?: number
@@ -53,6 +54,7 @@ export interface AdCreative {
   adset_name?: string
   spend: number
   impressions: number
+  frequency?: number
   link_clicks: number
   page_views?: number
   video_3s_views?: number
@@ -83,6 +85,7 @@ export interface AggregatedCreative {
   adset_name: string
   spend: number
   impressions: number
+  frequency: number
   link_clicks: number
   page_views: number
   has_page_views: boolean
@@ -103,6 +106,7 @@ export interface AggregatedCreative {
   ctr: number
   instagram_permalink: string
   ctr_weighted_sum?: number
+  frequency_weighted_sum?: number
 }
 
 export interface AggregatedCampaign {
@@ -110,6 +114,7 @@ export interface AggregatedCampaign {
   adset_name: string
   spend: number
   impressions: number
+  frequency: number
   link_clicks: number
   page_views: number
   has_page_views: boolean
@@ -130,6 +135,7 @@ export interface AggregatedCampaign {
   cpa: number
   ctr: number
   ctr_weighted_sum?: number
+  frequency_weighted_sum?: number
 }
 
 export interface UnattributedMqlLead {
@@ -203,6 +209,7 @@ export async function getAggregatedMetrics(
       impressions: acc.impressions + (day.total_impressions || 0),
       linkClicks: acc.linkClicks + (day.total_link_clicks || 0),
       pageViews: acc.pageViews + (day.total_page_views || 0),
+      frequencyWeightedSum: acc.frequencyWeightedSum + ((day.total_impressions || 0) * (day.frequency || 0)),
       video3sViews: acc.video3sViews + (day.total_video_3s_views || 0),
       thruplays: acc.thruplays + (day.total_thruplays || 0),
       video25Pct: acc.video25Pct + (day.total_video_25_pct || 0),
@@ -222,6 +229,7 @@ export async function getAggregatedMetrics(
       impressions: 0,
       linkClicks: 0,
       pageViews: 0,
+      frequencyWeightedSum: 0,
       video3sViews: 0,
       thruplays: 0,
       video25Pct: 0,
@@ -239,6 +247,7 @@ export async function getAggregatedMetrics(
   )
 
   const cpm = totals.impressions > 0 ? (totals.spend / totals.impressions) * 1000 : 0
+  const frequency = totals.impressions > 0 ? totals.frequencyWeightedSum / totals.impressions : 0
   const ctr = totals.impressions > 0 ? (totals.linkClicks / totals.impressions) * 100 : 0
   const realLeads = totals.sheetLeads > 0 ? totals.sheetLeads : totals.leads
   const cpl = realLeads > 0 ? totals.spend / realLeads : 0
@@ -254,6 +263,7 @@ export async function getAggregatedMetrics(
   return {
     ...totals,
     cpm,
+    frequency,
     ctr,
     cpl,
     cpc,
@@ -345,7 +355,8 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
 
     if (existing) {
       existing.spend += c.spend || 0
-      existing.impressions += c.impressions || 0
+        existing.impressions += c.impressions || 0
+      existing.frequency_weighted_sum = (existing.frequency_weighted_sum || 0) + (c.impressions || 0) * (c.frequency || 0)
       existing.link_clicks += c.link_clicks || 0
       if (typeof c.page_views === 'number') {
         existing.page_views += c.page_views || 0
@@ -402,6 +413,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         adset_name: currentAdSetName,
         spend: c.spend || 0,
         impressions: c.impressions || 0,
+        frequency: c.frequency || 0,
         link_clicks: c.link_clicks || 0,
         page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
         has_page_views: typeof c.page_views === 'number',
@@ -421,6 +433,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
         cpa: 0,
         ctr: 0,
         ctr_weighted_sum: (c.impressions || 0) * (c.ctr || 0),
+        frequency_weighted_sum: (c.impressions || 0) * (c.frequency || 0),
         instagram_permalink: c.instagram_permalink || '',
       })
     }
@@ -433,6 +446,7 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
     return {
       ...c,
+      frequency: c.impressions > 0 ? (c.frequency_weighted_sum || 0) / c.impressions : 0,
       load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
       cpa: realPurchases > 0 ? c.spend / realPurchases : 0,
@@ -464,6 +478,7 @@ export function aggregateCampaigns(
     if (existing) {
       existing.spend += c.spend || 0
       existing.impressions += c.impressions || 0
+      existing.frequency_weighted_sum = (existing.frequency_weighted_sum || 0) + (c.impressions || 0) * (c.frequency || 0)
       existing.link_clicks += c.link_clicks || 0
       if (typeof c.page_views === 'number') {
         existing.page_views += c.page_views || 0
@@ -497,6 +512,7 @@ export function aggregateCampaigns(
       adset_name: currentAdSetName,
       spend: c.spend || 0,
       impressions: c.impressions || 0,
+      frequency: c.frequency || 0,
       link_clicks: c.link_clicks || 0,
       page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
       has_page_views: typeof c.page_views === 'number',
@@ -517,6 +533,7 @@ export function aggregateCampaigns(
       cpa: 0,
       ctr: 0,
       ctr_weighted_sum: (c.impressions || 0) * (c.ctr || 0),
+      frequency_weighted_sum: (c.impressions || 0) * (c.frequency || 0),
     })
   }
 
@@ -526,6 +543,7 @@ export function aggregateCampaigns(
 
     return {
       ...c,
+      frequency: c.impressions > 0 ? (c.frequency_weighted_sum || 0) / c.impressions : 0,
       cpc: c.link_clicks > 0 ? c.spend / c.link_clicks : 0,
       load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,
@@ -558,6 +576,7 @@ export function aggregateAdSets(
     if (existing) {
       existing.spend += c.spend || 0
       existing.impressions += c.impressions || 0
+      existing.frequency_weighted_sum = (existing.frequency_weighted_sum || 0) + (c.impressions || 0) * (c.frequency || 0)
       existing.link_clicks += c.link_clicks || 0
       if (typeof c.page_views === 'number') {
         existing.page_views += c.page_views || 0
@@ -583,6 +602,7 @@ export function aggregateAdSets(
       adset_name: parentCampaignName,
       spend: c.spend || 0,
       impressions: c.impressions || 0,
+      frequency: c.frequency || 0,
       link_clicks: c.link_clicks || 0,
       page_views: typeof c.page_views === 'number' ? c.page_views || 0 : 0,
       has_page_views: typeof c.page_views === 'number',
@@ -603,6 +623,7 @@ export function aggregateAdSets(
       cpa: 0,
       ctr: 0,
       ctr_weighted_sum: (c.impressions || 0) * (c.ctr || 0),
+      frequency_weighted_sum: (c.impressions || 0) * (c.frequency || 0),
     })
   }
 
@@ -612,6 +633,7 @@ export function aggregateAdSets(
 
     return {
       ...c,
+      frequency: c.impressions > 0 ? (c.frequency_weighted_sum || 0) / c.impressions : 0,
       cpc: c.link_clicks > 0 ? c.spend / c.link_clicks : 0,
       load_rate: c.has_page_views && c.link_clicks > 0 ? (c.page_views / c.link_clicks) * 100 : null,
       cpl: realLeads > 0 ? c.spend / realLeads : 0,

@@ -11,8 +11,8 @@ import {
 import { CircleHelp, ShoppingCart, TrendingUp, DollarSign, Percent, Target } from 'lucide-react'
 
 const VIDEO_METRIC_HELP = {
-  hookRate: '% de pessoas que pararam o scroll e assistiram pelo menos 3 segundos do vídeo.',
-  holdRate: '% de pessoas que continuaram assistindo o vídeo após os primeiros segundos.',
+  hookRate: '% de pessoas que assistiram pelo menos 3 segundos do vídeo.',
+  holdRate: '% de pessoas que continuaram assistindo após os primeiros segundos.',
   completionRate: '% de pessoas que assistiram o vídeo quase até o final.',
 } as const
 
@@ -155,12 +155,12 @@ export function SheetPanel({
             const rate = calculateRate(quartile.value, impressions)
 
             return (
-              <div key={quartile.label}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm text-white/60">{quartile.label}</div>
+              <div key={quartile.label} className="rounded-xl border border-white/6 bg-white/[0.03] px-3 py-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium text-white/70">{quartile.label}</div>
                   <div className="text-right">
-                    <div className="font-semibold text-white">{quartile.value.toLocaleString('pt-BR')}</div>
-                    <div className="text-xs text-white/40">{formatPercent(rate)} das impressões</div>
+                    <div className="text-base font-semibold text-white">{quartile.value.toLocaleString('pt-BR')}</div>
+                    <div className="text-xs text-white/45">{formatPercent(rate)} das impressões</div>
                   </div>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">

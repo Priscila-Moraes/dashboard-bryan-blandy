@@ -7,6 +7,8 @@ interface MetricCardProps {
   icon: ReactNode
   color?: 'blue' | 'green' | 'yellow' | 'purple' | 'red' | 'gray'
   trend?: number
+  helperText?: string
+  className?: string
 }
 
 const colorStyles = {
@@ -27,19 +29,25 @@ const iconColorStyles = {
   gray: 'text-white/40',
 }
 
-export function MetricCard({ label, value, icon, color = 'gray', trend }: MetricCardProps) {
+export function MetricCard({ label, value, icon, color = 'gray', trend, helperText, className }: MetricCardProps) {
   return (
     <div className={cn(
       'rounded-xl border p-4 transition-all hover:scale-[1.02]',
-      colorStyles[color]
+      colorStyles[color],
+      className
     )}>
       <div className="flex items-start justify-between mb-2">
         <span className="text-xs text-white/60 uppercase tracking-wide">{label}</span>
         <div className={iconColorStyles[color]}>{icon}</div>
       </div>
       
-      <div className="flex items-end justify-between">
-        <span className="text-2xl font-bold text-white">{value}</span>
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <span className="text-2xl font-bold text-white">{value}</span>
+          {helperText && (
+            <div className="mt-1 text-[11px] text-white/45">{helperText}</div>
+          )}
+        </div>
         
         {trend !== undefined && (
           <span className={cn(
