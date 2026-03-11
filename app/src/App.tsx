@@ -56,6 +56,7 @@ export default function App() {
   const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedProduct)
   const isVideoViewProduct = selectedProduct === 'engajamento-video-view'
   const showAdSetsSection = ['engajamento-video-view', 'formulario-aplicacao'].includes(selectedProduct)
+  const showLoadRateInTables = selectedProduct !== 'formulario-aplicacao'
   const campaignPatterns = CAMPAIGN_PATTERN_BY_PRODUCT[selectedProduct] || []
   const usesCampaignPattern = campaignPatterns.length > 0
 
@@ -626,6 +627,7 @@ export default function App() {
                   isMqlPrimary={isMqlPrimaryProduct}
                   nameLabel="Campanha"
                   showVideoSubtitle={false}
+                  showLoadRate={showLoadRateInTables}
                 />
               </div>
 
@@ -642,6 +644,7 @@ export default function App() {
                     isMqlPrimary={isMqlPrimaryProduct}
                     nameLabel="Conjunto"
                     showVideoSubtitle={isVideoViewProduct}
+                    showLoadRate={showLoadRateInTables}
                   />
                 </div>
               )}

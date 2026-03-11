@@ -29,6 +29,7 @@ interface CampaignsTableProps {
   isMqlPrimary?: boolean
   nameLabel?: string
   showVideoSubtitle?: boolean
+  showLoadRate?: boolean
 }
 
 export function CampaignsTable({
@@ -38,6 +39,7 @@ export function CampaignsTable({
   isMqlPrimary = false,
   nameLabel,
   showVideoSubtitle = true,
+  showLoadRate = true,
 }: CampaignsTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('spend')
 
@@ -64,7 +66,7 @@ export function CampaignsTable({
         { key: 'spend', label: 'Gasto' },
         { key: 'conversions', label: conversionLabel },
         { key: 'clicks', label: 'Cliques' },
-        { key: 'load_rate', label: 'Taxa Carreg.' },
+        ...(showLoadRate ? [{ key: 'load_rate' as SortKey, label: 'Taxa Carreg.' }] : []),
         { key: 'cpc', label: 'CPC' },
         { key: 'cost_per', label: costLabel },
         { key: 'ctr', label: 'CTR' },
@@ -171,7 +173,7 @@ export function CampaignsTable({
               ) : (
                 <>
                   <th className="pb-3 pr-4 text-right">Cliques</th>
-                  <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>
+                  {showLoadRate && <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>}
                   <th className="pb-3 pr-4 text-right">CPC</th>
                   <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
                   <th className="pb-3 pr-4 text-right">{costLabel}</th>
@@ -222,13 +224,15 @@ export function CampaignsTable({
                   ) : (
                     <>
                       <td className="py-3 pr-4 text-right text-white/80">{campaign.link_clicks}</td>
-                      <td className="py-3 pr-4 text-right">
-                        {campaign.load_rate !== null ? (
-                          <span className="text-cyan-300">{formatPercent(campaign.load_rate)}</span>
-                        ) : (
-                          <span className="text-white/30">—</span>
-                        )}
-                      </td>
+                      {showLoadRate && (
+                        <td className="py-3 pr-4 text-right">
+                          {campaign.load_rate !== null ? (
+                            <span className="text-cyan-300">{formatPercent(campaign.load_rate)}</span>
+                          ) : (
+                            <span className="text-white/30">—</span>
+                          )}
+                        </td>
+                      )}
                       <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.cpc)}</td>
                       <td className="py-3 pr-4 text-right">
                         <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
