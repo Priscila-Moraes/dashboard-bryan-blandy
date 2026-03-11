@@ -55,6 +55,7 @@ export default function App() {
   const isNativeForm = selectedProduct === 'formulario-aplicacao'
   const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedProduct)
   const isVideoViewProduct = selectedProduct === 'engajamento-video-view'
+  const showAdSetsSection = ['engajamento-video-view', 'formulario-aplicacao'].includes(selectedProduct)
   const campaignPatterns = CAMPAIGN_PATTERN_BY_PRODUCT[selectedProduct] || []
   const usesCampaignPattern = campaignPatterns.length > 0
 
@@ -93,12 +94,12 @@ export default function App() {
 
       if (data?.dailyData) {
         setCampaigns(aggregateCampaigns(rawCreatives))
-        setAdSets(isVideoViewProduct ? aggregateAdSets(rawCreatives) : [])
+        setAdSets(showAdSetsSection ? aggregateAdSets(rawCreatives) : [])
         setMetrics(data)
         setDailyData(data.dailyData)
       } else if (rawCreatives.length > 0) {
         setCampaigns(aggregateCampaigns(rawCreatives))
-        setAdSets(isVideoViewProduct ? aggregateAdSets(rawCreatives) : [])
+        setAdSets(showAdSetsSection ? aggregateAdSets(rawCreatives) : [])
         // Fallback: se o job do daily_summary nao rodou para hoje/ontem mas os criativos existem,
         // ainda da para exibir gasto/cliques/leads e a tabela normalmente.
         setUsingCreativesFallback(true)
@@ -628,7 +629,7 @@ export default function App() {
                 />
               </div>
 
-              {isVideoViewProduct && (
+      {showAdSetsSection && (
                 <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                   <h3 className="text-sm font-medium text-white/60 mb-4">
                     Conjuntos
@@ -637,10 +638,10 @@ export default function App() {
                   <CampaignsTable
                     data={adSets}
                     isSales={isSalesProduct}
-                    isVideoView
+                    isVideoView={isVideoViewProduct}
                     isMqlPrimary={isMqlPrimaryProduct}
                     nameLabel="Conjunto"
-                    showVideoSubtitle
+                    showVideoSubtitle={isVideoViewProduct}
                   />
                 </div>
               )}
