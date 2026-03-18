@@ -345,6 +345,7 @@ function normalizeCreativeGroupKey(adName: string | null | undefined): string {
 export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[] {
   const map = new Map<string, AggregatedCreative>()
   const isVideoViewProduct = creatives.some((item) => item.product_name === 'engajamento-video-view')
+  const useSheetOnlySales = creatives.some((item) => item.product_name === 'webinarflix')
 
   for (const c of creatives) {
     const currentAdName = String(c.ad_name || '').trim()
@@ -440,9 +441,13 @@ export function aggregateCreatives(creatives: AdCreative[]): AggregatedCreative[
   }
 
   // Recalcular métricas derivadas após agregação
-  // Prioriza sheet_purchases (planilha) sobre purchases (Meta)
+  // WebinarFlix usa somente planilha para vendas; demais mantêm fallback Meta.
   const result = Array.from(map.values()).map(c => {
-    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
+    const realPurchases = useSheetOnlySales
+      ? c.sheetPurchases || 0
+      : c.sheetPurchases > 0
+        ? c.sheetPurchases
+        : c.purchases
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
     return {
       ...c,
@@ -469,6 +474,7 @@ export function aggregateCampaigns(
 ): AggregatedCampaign[] {
   const map = new Map<string, AggregatedCampaign>()
   const isVideoViewProduct = creatives.some((item) => item.product_name === 'engajamento-video-view')
+  const useSheetOnlySales = creatives.some((item) => item.product_name === 'webinarflix')
 
   for (const c of creatives) {
     const key = (c.campaign_name || '').trim() || '(sem campanha)'
@@ -538,7 +544,11 @@ export function aggregateCampaigns(
   }
 
   const result = Array.from(map.values()).map((c) => {
-    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
+    const realPurchases = useSheetOnlySales
+      ? c.sheetPurchases || 0
+      : c.sheetPurchases > 0
+        ? c.sheetPurchases
+        : c.purchases
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
 
     return {
@@ -567,6 +577,7 @@ export function aggregateAdSets(
 ): AggregatedCampaign[] {
   const map = new Map<string, AggregatedCampaign>()
   const isVideoViewProduct = creatives.some((item) => item.product_name === 'engajamento-video-view')
+  const useSheetOnlySales = creatives.some((item) => item.product_name === 'webinarflix')
 
   for (const c of creatives) {
     const adSetKey = (c.adset_name || '').trim() || '(sem conjunto)'
@@ -628,7 +639,11 @@ export function aggregateAdSets(
   }
 
   const result = Array.from(map.values()).map((c) => {
-    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases
+    const realPurchases = useSheetOnlySales
+      ? c.sheetPurchases || 0
+      : c.sheetPurchases > 0
+        ? c.sheetPurchases
+        : c.purchases
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads
 
     return {

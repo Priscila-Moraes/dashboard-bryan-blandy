@@ -68,6 +68,7 @@ const CREATIVE_NAME_OVERRIDES: Record<string, string> = {
 
 interface CreativesTableProps {
   data: AggregatedCreative[]
+  productId?: string
   isSales: boolean
   isVideoView?: boolean
   isMqlPrimary?: boolean
@@ -81,6 +82,7 @@ interface CreativesTableProps {
 
 export function CreativesTable({
   data,
+  productId,
   isSales,
   isVideoView = false,
   isMqlPrimary = false,
@@ -120,6 +122,7 @@ export function CreativesTable({
   }
 
   const viewLabel = isVideoView ? 'ThruPlays' : isSales ? 'Vendas' : leadsView === 'mql' ? 'MQLs' : 'Leads'
+  const useSheetOnlySales = isSales && productId === 'webinarflix'
 
   // Calcular conversões sem atribuição (diferença entre total da planilha e soma atribuída por ad_id)
   const totals = useMemo(() => {
@@ -200,7 +203,11 @@ export function CreativesTable({
 
   const getSortValue = (c: AggregatedCreative, key: SortKey): number => {
     const cpc = c.link_clicks > 0 ? c.spend / c.link_clicks : 0
-    const realPurchases = c.sheetPurchases > 0 ? c.sheetPurchases : c.purchases || 0
+    const realPurchases = useSheetOnlySales
+      ? c.sheetPurchases || 0
+      : c.sheetPurchases > 0
+        ? c.sheetPurchases
+        : c.purchases || 0
     const realLeads = c.sheetLeadsUtm > 0 ? c.sheetLeadsUtm : c.leads || 0
     const realMqls = c.sheetMqls || 0
     const hookRate = calculateHookRate(c.video_3s_views || 0, c.impressions || 0)
@@ -424,7 +431,11 @@ export function CreativesTable({
           <tbody className="divide-y divide-white/5">
             {topRows.map((creative, index) => {
               const cpc = creative.link_clicks > 0 ? creative.spend / creative.link_clicks : 0
-              const realPurchases = creative.sheetPurchases > 0 ? creative.sheetPurchases : creative.purchases || 0
+              const realPurchases = useSheetOnlySales
+                ? creative.sheetPurchases || 0
+                : creative.sheetPurchases > 0
+                  ? creative.sheetPurchases
+                  : creative.purchases || 0
               const realLeads = creative.sheetLeadsUtm > 0 ? creative.sheetLeadsUtm : creative.leads || 0
               const realMqls = creative.sheetMqls || 0
               const hookRate = calculateHookRate(creative.video_3s_views || 0, creative.impressions || 0)

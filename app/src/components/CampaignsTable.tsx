@@ -24,6 +24,7 @@ interface SortOption {
 
 interface CampaignsTableProps {
   data: AggregatedCampaign[]
+  productId?: string
   isSales: boolean
   isVideoView?: boolean
   isMqlPrimary?: boolean
@@ -34,6 +35,7 @@ interface CampaignsTableProps {
 
 export function CampaignsTable({
   data,
+  productId,
   isSales,
   isVideoView = false,
   isMqlPrimary = false,
@@ -42,6 +44,7 @@ export function CampaignsTable({
   showLoadRate = true,
 }: CampaignsTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('spend')
+  const useSheetOnlySales = isSales && productId === 'webinarflix'
 
   if (!data || data.length === 0) {
     return <div className="text-center py-8 text-white/40">Sem dados de campanhas para o período</div>
@@ -74,7 +77,10 @@ export function CampaignsTable({
 
   const getConversions = (campaign: AggregatedCampaign) => {
     if (isVideoView) return campaign.thruplays || 0
-    if (isSales) return campaign.sheetPurchases > 0 ? campaign.sheetPurchases : campaign.purchases
+    if (isSales) {
+      if (useSheetOnlySales) return campaign.sheetPurchases || 0
+      return campaign.sheetPurchases > 0 ? campaign.sheetPurchases : campaign.purchases
+    }
     if (isMqlPrimary) return campaign.sheetMqls || 0
     return campaign.sheetLeadsUtm > 0 ? campaign.sheetLeadsUtm : campaign.leads
   }

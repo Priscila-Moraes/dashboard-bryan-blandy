@@ -622,6 +622,7 @@ export default function App() {
                 </h3>
                 <CampaignsTable
                   data={campaigns}
+                  productId={selectedProduct}
                   isSales={isSalesProduct}
                   isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
@@ -639,6 +640,7 @@ export default function App() {
                   </h3>
                   <CampaignsTable
                     data={adSets}
+                    productId={selectedProduct}
                     isSales={isSalesProduct}
                     isVideoView={isVideoViewProduct}
                     isMqlPrimary={isMqlPrimaryProduct}
@@ -656,6 +658,7 @@ export default function App() {
                 </h3>
                 <CreativesTable
                   data={creatives}
+                  productId={selectedProduct}
                   isSales={isSalesProduct}
                   isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
