@@ -58,6 +58,8 @@ export default function App() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [latestAvailableDate, setLatestAvailableDate] = useState<string | null>(null)
   const [usingCreativesFallback, setUsingCreativesFallback] = useState(false)
+  const [activeCampaignNames, setActiveCampaignNames] = useState<string[]>([])
+  const [activeCampaignBaseDate, setActiveCampaignBaseDate] = useState<string | null>(null)
 
   const currentProduct = PRODUCTS.find(p => p.id === selectedProduct)
   const selectedDataProduct = currentProduct?.dataProductId || selectedProduct
@@ -77,6 +79,23 @@ export default function App() {
       const rawCreatives = await getAdCreatives(selectedDataProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
       setCreatives(aggregated)
+      const rawDates = rawCreatives
+        .map((c) => String(c.date || '').slice(0, 10))
+        .filter(Boolean)
+      if (rawDates.length > 0) {
+        const latestCreativeDate = rawDates.sort().at(-1) as string
+        const activeNames = rawCreatives
+          .filter((c) => String(c.date || '').slice(0, 10) === latestCreativeDate && Number(c.spend || 0) > 0)
+          .map((c) => String(c.campaign_name || '').trim() || '(sem campanha)')
+        const fallbackNames = rawCreatives
+          .filter((c) => String(c.date || '').slice(0, 10) === latestCreativeDate)
+          .map((c) => String(c.campaign_name || '').trim() || '(sem campanha)')
+        setActiveCampaignNames(Array.from(new Set(activeNames.length > 0 ? activeNames : fallbackNames)))
+        setActiveCampaignBaseDate(latestCreativeDate)
+      } else {
+        setActiveCampaignNames([])
+        setActiveCampaignBaseDate(null)
+      }
 
       // Buscar metricas agregadas do daily_summary
       const data = await getAggregatedMetrics(selectedDataProduct, dateRange.start, dateRange.end)
@@ -462,6 +481,9 @@ export default function App() {
                   data={campaigns}
                   isSales={isSalesProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
+                  showActiveFilter={selectedDataProduct === 'workshop-lancamento-simultaneo'}
+                  activeNames={activeCampaignNames}
+                  activeDate={activeCampaignBaseDate}
                 />
               </div>
 

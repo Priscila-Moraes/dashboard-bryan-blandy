@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowUpDown } from 'lucide-react'
 import { formatCurrency, formatPercent } from '../lib/utils'
 import type { AggregatedCampaign } from '../lib/supabase'
@@ -14,10 +14,30 @@ interface CampaignsTableProps {
   data: AggregatedCampaign[]
   isSales: boolean
   isMqlPrimary?: boolean
+  activeNames?: string[]
+  activeDate?: string | null
+  showActiveFilter?: boolean
 }
 
-export function CampaignsTable({ data, isSales, isMqlPrimary = false }: CampaignsTableProps) {
+export function CampaignsTable({
+  data,
+  isSales,
+  isMqlPrimary = false,
+  activeNames,
+  activeDate = null,
+  showActiveFilter = false,
+}: CampaignsTableProps) {
   const [sortBy, setSortBy] = useState<SortKey>('spend')
+  const [onlyActive, setOnlyActive] = useState<boolean>(showActiveFilter)
+  const activeSet = useMemo(() => new Set((activeNames || []).map((n) => (n || '').trim())), [activeNames])
+
+  useEffect(() => {
+    if (showActiveFilter) {
+      setOnlyActive(true)
+    } else {
+      setOnlyActive(false)
+    }
+  }, [showActiveFilter, activeNames?.length])
 
   if (!data || data.length === 0) {
     return <div className="text-center py-8 text-white/40">Sem dados de campanhas para o período</div>
@@ -68,7 +88,11 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
     }
   }
 
-  const sorted = [...data].sort((a, b) => {
+  const rows = onlyActive && activeSet.size > 0
+    ? data.filter((campaign) => activeSet.has((campaign.campaign_name || '').trim()))
+    : data
+
+  const sorted = [...rows].sort((a, b) => {
     const va = getSortValue(a, sortBy)
     const vb = getSortValue(b, sortBy)
     if (sortBy === 'cpc' || sortBy === 'cost_per') {
@@ -104,6 +128,35 @@ export function CampaignsTable({ data, isSales, isMqlPrimary = false }: Campaign
             </button>
           ))}
         </div>
+        {showActiveFilter && (
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              onClick={() => setOnlyActive(true)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                onlyActive
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70'
+              }`}
+            >
+              Somente ativas
+            </button>
+            <button
+              onClick={() => setOnlyActive(false)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                !onlyActive
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                  : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white/70'
+              }`}
+            >
+              Todas
+            </button>
+            {onlyActive && activeDate && (
+              <span className="text-[11px] text-white/40">
+                Base: {activeDate.split('-').reverse().join('/')}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="overflow-x-auto">
