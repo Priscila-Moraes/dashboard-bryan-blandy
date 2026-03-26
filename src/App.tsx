@@ -21,12 +21,30 @@ import {
   RefreshCw
 } from 'lucide-react'
 
-const PRODUCTS = [
-  { id: 'webinarflix', name: 'WebinarFlix', type: 'sales' },
-  { id: 'workshop-lancamento-simultaneo', name: 'Workshop Lançamento Simultaneo', type: 'sales' },
-  { id: 'upgrade-persona', name: 'Upgrade de Persona', type: 'leads' },
-  { id: 'fib-live', name: 'FIB Live', type: 'sales' },
-  { id: 'formulario-aplicacao', name: 'Formulário de Aplicação', type: 'leads' },
+type ProductView = {
+  id: string
+  dataProductId: string
+  name: string
+  type: 'sales' | 'leads'
+}
+
+const PRODUCTS: ProductView[] = [
+  { id: 'webinarflix', dataProductId: 'webinarflix', name: 'WebinarFlix', type: 'sales' },
+  {
+    id: 'workshop-lancamento-simultaneo',
+    dataProductId: 'workshop-lancamento-simultaneo',
+    name: 'Workshop Lançamento Simultaneo',
+    type: 'sales',
+  },
+  {
+    id: 'workshop-lancamento-simultaneo-leads',
+    dataProductId: 'workshop-lancamento-simultaneo',
+    name: 'Workshop Lançamento Simultaneo - Leads',
+    type: 'leads',
+  },
+  { id: 'upgrade-persona', dataProductId: 'upgrade-persona', name: 'Upgrade de Persona', type: 'leads' },
+  { id: 'fib-live', dataProductId: 'fib-live', name: 'FIB Live', type: 'sales' },
+  { id: 'formulario-aplicacao', dataProductId: 'formulario-aplicacao', name: 'Formulário de Aplicação', type: 'leads' },
 ]
 
 export default function App() {
@@ -42,9 +60,10 @@ export default function App() {
   const [usingCreativesFallback, setUsingCreativesFallback] = useState(false)
 
   const currentProduct = PRODUCTS.find(p => p.id === selectedProduct)
+  const selectedDataProduct = currentProduct?.dataProductId || selectedProduct
   const isSalesProduct = currentProduct?.type === 'sales'
-  const isNativeForm = selectedProduct === 'formulario-aplicacao'
-  const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedProduct)
+  const isNativeForm = selectedDataProduct === 'formulario-aplicacao'
+  const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedDataProduct)
 
   const todayBRT = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
 
@@ -55,12 +74,12 @@ export default function App() {
       setUsingCreativesFallback(false)
 
       // Buscar criativos e agregar por ad_id (serve como fallback quando daily_summary ainda nao gravou hoje/ontem).
-      const rawCreatives = await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
+      const rawCreatives = await getAdCreatives(selectedDataProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
       setCreatives(aggregated)
 
       // Buscar metricas agregadas do daily_summary
-      const data = await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
+      const data = await getAggregatedMetrics(selectedDataProduct, dateRange.start, dateRange.end)
       setLatestAvailableDate(null)
 
       if (data?.dailyData) {
@@ -122,7 +141,7 @@ export default function App() {
             return {
               // DailySummary shape used by charts
               date,
-              product_name: selectedProduct,
+              product_name: selectedDataProduct,
               account_id: '',
               total_spend: d.spend,
               total_impressions: d.impressions,
@@ -206,7 +225,7 @@ export default function App() {
         setDailyData([])
 
         // Ajuda a diagnosticar quando o range esta “vazio” porque o sync ainda nao gravou os dias recentes.
-        const latest = await getLatestDailySummaryDate(selectedProduct)
+        const latest = await getLatestDailySummaryDate(selectedDataProduct)
         setLatestAvailableDate(latest)
       }
 
@@ -274,12 +293,14 @@ export default function App() {
                 value={selectedProduct}
                 onChange={(e) => {
                   const newProduct = e.target.value
+                  const newProductMeta = PRODUCTS.find((p) => p.id === newProduct)
+                  const dateProductId = newProductMeta?.dataProductId || newProduct
                   setSelectedProduct(newProduct)
                   // Formulário de Aplicação: abre com dados desde janeiro
-                  if (newProduct === 'formulario-aplicacao') {
+                  if (dateProductId === 'formulario-aplicacao') {
                     setDateRange({ start: '2026-01-01', end: todayBRT })
                   } else {
-                    setDateRange(getDateRange('allTime', newProduct))
+                    setDateRange(getDateRange('allTime', dateProductId))
                   }
                 }}
                 className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -296,7 +317,7 @@ export default function App() {
                 startDate={dateRange.start}
                 endDate={dateRange.end}
                 onChange={setDateRange}
-                productId={selectedProduct}
+                productId={selectedDataProduct}
               />
 
               {/* Refresh */}

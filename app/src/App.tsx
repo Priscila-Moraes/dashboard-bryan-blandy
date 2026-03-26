@@ -23,13 +23,36 @@ import {
   RefreshCw
 } from 'lucide-react'
 
-const PRODUCTS = [
-  { id: 'webinarflix', name: 'WebinarFlix', type: 'sales' },
-  { id: 'workshop-lancamento-simultaneo', name: 'Workshop Lançamento Simultaneo', type: 'sales' },
-  { id: 'upgrade-persona', name: 'Upgrade de Persona', type: 'leads' },
-  { id: 'fib-live', name: 'FIB Live', type: 'sales' },
-  { id: 'formulario-aplicacao', name: 'Formulário de Aplicação', type: 'leads' },
-  { id: 'engajamento-video-view', name: 'Engajamento Video View', type: 'leads' },
+type ProductView = {
+  id: string
+  dataProductId: string
+  name: string
+  type: 'sales' | 'leads'
+}
+
+const PRODUCTS: ProductView[] = [
+  { id: 'webinarflix', dataProductId: 'webinarflix', name: 'WebinarFlix', type: 'sales' },
+  {
+    id: 'workshop-lancamento-simultaneo',
+    dataProductId: 'workshop-lancamento-simultaneo',
+    name: 'Workshop Lançamento Simultaneo',
+    type: 'sales',
+  },
+  {
+    id: 'workshop-lancamento-simultaneo-leads',
+    dataProductId: 'workshop-lancamento-simultaneo',
+    name: 'Workshop Lançamento Simultaneo - Leads',
+    type: 'leads',
+  },
+  { id: 'upgrade-persona', dataProductId: 'upgrade-persona', name: 'Upgrade de Persona', type: 'leads' },
+  { id: 'fib-live', dataProductId: 'fib-live', name: 'FIB Live', type: 'sales' },
+  { id: 'formulario-aplicacao', dataProductId: 'formulario-aplicacao', name: 'Formulário de Aplicação', type: 'leads' },
+  {
+    id: 'engajamento-video-view',
+    dataProductId: 'engajamento-video-view',
+    name: 'Engajamento Video View',
+    type: 'leads',
+  },
 ]
 
 const CAMPAIGN_PATTERN_BY_PRODUCT: Record<string, string[]> = {
@@ -51,13 +74,14 @@ export default function App() {
   const [unattributedMqlLeads, setUnattributedMqlLeads] = useState<UnattributedMqlLead[]>([])
 
   const currentProduct = PRODUCTS.find(p => p.id === selectedProduct)
+  const selectedDataProduct = currentProduct?.dataProductId || selectedProduct
   const isSalesProduct = currentProduct?.type === 'sales'
-  const isNativeForm = selectedProduct === 'formulario-aplicacao'
-  const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedProduct)
-  const isVideoViewProduct = selectedProduct === 'engajamento-video-view'
-  const showAdSetsSection = ['engajamento-video-view', 'formulario-aplicacao'].includes(selectedProduct)
-  const showLoadRateInTables = selectedProduct !== 'formulario-aplicacao'
-  const campaignPatterns = CAMPAIGN_PATTERN_BY_PRODUCT[selectedProduct] || []
+  const isNativeForm = selectedDataProduct === 'formulario-aplicacao'
+  const isMqlPrimaryProduct = ['upgrade-persona', 'formulario-aplicacao'].includes(selectedDataProduct)
+  const isVideoViewProduct = selectedDataProduct === 'engajamento-video-view'
+  const showAdSetsSection = ['engajamento-video-view', 'formulario-aplicacao'].includes(selectedDataProduct)
+  const showLoadRateInTables = selectedDataProduct !== 'formulario-aplicacao'
+  const campaignPatterns = CAMPAIGN_PATTERN_BY_PRODUCT[selectedDataProduct] || []
   const usesCampaignPattern = campaignPatterns.length > 0
 
   const todayBRT = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
@@ -71,13 +95,13 @@ export default function App() {
       // Buscar criativos e agregar por ad_name (fallback ad_id) para evitar duplicidade visual.
       const rawCreatives = usesCampaignPattern
         ? await getAdCreativesByCampaignPatterns(dateRange.start, dateRange.end, campaignPatterns)
-        : await getAdCreatives(selectedProduct, dateRange.start, dateRange.end)
+        : await getAdCreatives(selectedDataProduct, dateRange.start, dateRange.end)
       const aggregated = aggregateCreatives(rawCreatives)
       setCreatives(aggregated)
 
-      if (selectedProduct === 'fib-live') {
+      if (selectedDataProduct === 'fib-live') {
         const unattributedLeads = await getUnattributedMqlLeads(
-          selectedProduct,
+          selectedDataProduct,
           dateRange.start,
           dateRange.end,
           100
@@ -90,7 +114,7 @@ export default function App() {
       // Buscar metricas agregadas do daily_summary
       const data = usesCampaignPattern && !isVideoViewProduct
         ? null
-        : await getAggregatedMetrics(selectedProduct, dateRange.start, dateRange.end)
+        : await getAggregatedMetrics(selectedDataProduct, dateRange.start, dateRange.end)
       setLatestAvailableDate(null)
 
       if (data?.dailyData) {
@@ -176,7 +200,7 @@ export default function App() {
             return {
               // DailySummary shape used by charts
               date,
-              product_name: selectedProduct,
+              product_name: selectedDataProduct,
               account_id: '',
               total_spend: d.spend,
               total_impressions: d.impressions,
@@ -284,7 +308,7 @@ export default function App() {
         setDailyData([])
 
         // Ajuda a diagnosticar quando o range esta “vazio” porque o sync ainda nao gravou os dias recentes.
-        const latest = usesCampaignPattern && !isVideoViewProduct ? null : await getLatestDailySummaryDate(selectedProduct)
+        const latest = usesCampaignPattern && !isVideoViewProduct ? null : await getLatestDailySummaryDate(selectedDataProduct)
         setLatestAvailableDate(latest)
       }
 
@@ -352,12 +376,14 @@ export default function App() {
                 value={selectedProduct}
                 onChange={(e) => {
                   const newProduct = e.target.value
+                  const newProductMeta = PRODUCTS.find((p) => p.id === newProduct)
+                  const dateProductId = newProductMeta?.dataProductId || newProduct
                   setSelectedProduct(newProduct)
                   // Formulário de Aplicação: abre com dados desde janeiro
-                  if (newProduct === 'formulario-aplicacao') {
+                  if (dateProductId === 'formulario-aplicacao') {
                     setDateRange({ start: '2026-01-01', end: todayBRT })
                   } else {
-                    setDateRange(getDateRange('allTime', newProduct))
+                    setDateRange(getDateRange('allTime', dateProductId))
                   }
                 }}
                 className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -374,7 +400,7 @@ export default function App() {
                 startDate={dateRange.start}
                 endDate={dateRange.end}
                 onChange={setDateRange}
-                productId={selectedProduct}
+                productId={selectedDataProduct}
               />
 
               {/* Refresh */}
@@ -622,7 +648,7 @@ export default function App() {
                 </h3>
                 <CampaignsTable
                   data={campaigns}
-                  productId={selectedProduct}
+                  productId={selectedDataProduct}
                   isSales={isSalesProduct}
                   isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
@@ -640,7 +666,7 @@ export default function App() {
                   </h3>
                   <CampaignsTable
                     data={adSets}
-                    productId={selectedProduct}
+                    productId={selectedDataProduct}
                     isSales={isSalesProduct}
                     isVideoView={isVideoViewProduct}
                     isMqlPrimary={isMqlPrimaryProduct}
@@ -658,20 +684,20 @@ export default function App() {
                 </h3>
                 <CreativesTable
                   data={creatives}
-                  productId={selectedProduct}
+                  productId={selectedDataProduct}
                   isSales={isSalesProduct}
                   isVideoView={isVideoViewProduct}
                   isMqlPrimary={isMqlPrimaryProduct}
-                  showMqlInSales={selectedProduct === 'fib-live'}
-                  showDeliveryMetrics={selectedProduct === 'workshop-lancamento-simultaneo'}
-                  subtitleMode={selectedProduct === 'formulario-aplicacao' ? 'adset' : 'campaign'}
+                  showMqlInSales={selectedDataProduct === 'fib-live'}
+                  showDeliveryMetrics={selectedDataProduct === 'workshop-lancamento-simultaneo'}
+                  subtitleMode={selectedDataProduct === 'formulario-aplicacao' ? 'adset' : 'campaign'}
                   totalSheetSales={metrics.sheetSales}
                   totalSheetLeads={metrics.sheetLeads}
                   totalSheetMqls={metrics.sheetMqls}
                 />
               </div>
 
-              {selectedProduct === 'fib-live' && (
+              {selectedDataProduct === 'fib-live' && (
                 <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                   <h3 className="text-sm font-medium text-white/60 mb-4">
                     MQLs Sem Atribuicao (Auditoria)
