@@ -214,25 +214,25 @@ export function CampaignsTable({
             <tr className="text-left text-xs text-white/50 uppercase border-b border-white/10">
               <th className="pb-3 pr-4">#</th>
               <th className="pb-3 pr-4">{resolvedNameLabel}</th>
-              <th className="pb-3 pr-4 text-right">Gasto</th>
+              <th className="pb-3 px-2 text-center">Gasto</th>
               {isVideoView ? (
                 <>
-                  <th className="pb-3 pr-4 text-right">Impressões</th>
-                  <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
-                  <th className="pb-3 pr-4 text-right">25%</th>
-                  <th className="pb-3 pr-4 text-right">50%</th>
-                  <th className="pb-3 pr-4 text-right">75%</th>
-                  <th className="pb-3 pr-4 text-right">95%</th>
-                  <th className="pb-3 pr-4 text-right">{costLabel}</th>
+                  <th className="pb-3 px-2 text-center">Impressões</th>
+                  <th className="pb-3 px-2 text-center">{conversionLabel}</th>
+                  <th className="pb-3 px-2 text-center">25%</th>
+                  <th className="pb-3 px-2 text-center">50%</th>
+                  <th className="pb-3 px-2 text-center">75%</th>
+                  <th className="pb-3 px-2 text-center">95%</th>
+                  <th className="pb-3 px-2 text-center">{costLabel}</th>
                 </>
               ) : (
                 <>
-                  <th className="pb-3 pr-4 text-right">Cliques</th>
-                  {showLoadRate && <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>}
-                  <th className="pb-3 pr-4 text-right">CPC</th>
-                  <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
-                  <th className="pb-3 pr-4 text-right">{costLabel}</th>
-                  <th className="pb-3 pr-4 text-right">CTR</th>
+                  <th className="pb-3 px-2 text-center">Cliques</th>
+                  {showLoadRate && <th className="pb-3 px-2 text-center">Taxa Carreg.</th>}
+                  <th className="pb-3 px-2 text-center">CPC</th>
+                  <th className="pb-3 px-2 text-center">{conversionLabel}</th>
+                  <th className="pb-3 px-2 text-center">{costLabel}</th>
+                  <th className="pb-3 px-2 text-center">CTR</th>
                 </>
               )}
             </tr>
@@ -255,20 +255,20 @@ export function CampaignsTable({
                       </div>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.spend)}</td>
+                  <td className="py-3 px-2 text-center text-white/80">{formatCurrency(campaign.spend)}</td>
                   {isVideoView ? (
                     <>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.impressions || 0)}</td>
-                      <td className="py-3 pr-4 text-right">
+                      <td className="py-3 px-2 text-center text-white/80">{formatNumber(campaign.impressions || 0)}</td>
+                      <td className="py-3 px-2 text-center">
                         <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>
                           {formatNumber(conversions)}
                         </span>
                       </td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_25_pct || 0)}</td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_50_pct || 0)}</td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_75_pct || 0)}</td>
-                      <td className="py-3 pr-4 text-right text-white/80">{formatNumber(campaign.video_95_pct || 0)}</td>
-                      <td className="py-3 pr-4 text-right">
+                      <td className="py-3 px-2 text-center text-white/80">{formatNumber(campaign.video_25_pct || 0)}</td>
+                      <td className="py-3 px-2 text-center text-white/80">{formatNumber(campaign.video_50_pct || 0)}</td>
+                      <td className="py-3 px-2 text-center text-white/80">{formatNumber(campaign.video_75_pct || 0)}</td>
+                      <td className="py-3 px-2 text-center text-white/80">{formatNumber(campaign.video_95_pct || 0)}</td>
+                      <td className="py-3 px-2 text-center">
                         {costPer > 0 ? (
                           <span className="text-yellow-300">{formatCurrency(costPer)}</span>
                         ) : (
@@ -278,9 +278,9 @@ export function CampaignsTable({
                     </>
                   ) : (
                     <>
-                      <td className="py-3 pr-4 text-right text-white/80">{campaign.link_clicks}</td>
+                      <td className="py-3 px-2 text-center text-white/80">{campaign.link_clicks}</td>
                       {showLoadRate && (
-                        <td className="py-3 pr-4 text-right">
+                        <td className="py-3 px-2 text-center">
                           {campaign.load_rate !== null ? (
                             <span className="text-cyan-300">{formatPercent(campaign.load_rate)}</span>
                           ) : (
@@ -288,21 +288,21 @@ export function CampaignsTable({
                           )}
                         </td>
                       )}
-                      <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.cpc)}</td>
-                      <td className="py-3 pr-4 text-right">
+                      <td className="py-3 px-2 text-center text-white/80">{formatCurrency(campaign.cpc)}</td>
+                      <td className="py-3 px-2 text-center">
                         <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
                         {isSales && (
-                          <div className="text-[11px] text-white/35 mt-0.5">Meta: {campaign.purchases || 0}</div>
+                          <div className="text-[11px] text-white/35 mt-0.5 text-center">Meta: {campaign.purchases || 0}</div>
                         )}
                       </td>
-                      <td className="py-3 pr-4 text-right">
+                      <td className="py-3 px-2 text-center">
                         {costPer > 0 ? (
                           <span className="text-yellow-300">{formatCurrency(costPer)}</span>
                         ) : (
                           <span className="text-white/30">—</span>
                         )}
                       </td>
-                      <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(campaign.ctr)}</td>
+                      <td className="py-3 px-2 text-center text-blue-400">{formatPercent(campaign.ctr)}</td>
                     </>
                   )}
                 </tr>

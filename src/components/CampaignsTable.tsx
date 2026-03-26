@@ -165,13 +165,13 @@ export function CampaignsTable({
             <tr className="text-left text-xs text-white/50 uppercase border-b border-white/10">
               <th className="pb-3 pr-4">#</th>
               <th className="pb-3 pr-4">Campanha</th>
-              <th className="pb-3 pr-4 text-right">Gasto</th>
-              <th className="pb-3 pr-4 text-right">Cliques</th>
-              <th className="pb-3 pr-4 text-right">Taxa Carreg.</th>
-              <th className="pb-3 pr-4 text-right">CPC</th>
-              <th className="pb-3 pr-4 text-right">{conversionLabel}</th>
-              <th className="pb-3 pr-4 text-right">{costLabel}</th>
-              <th className="pb-3 pr-4 text-right">CTR</th>
+              <th className="pb-3 px-2 text-center">Gasto</th>
+              <th className="pb-3 px-2 text-center">Cliques</th>
+              <th className="pb-3 px-2 text-center">Taxa Carreg.</th>
+              <th className="pb-3 px-2 text-center">CPC</th>
+              <th className="pb-3 px-2 text-center">{conversionLabel}</th>
+              <th className="pb-3 px-2 text-center">{costLabel}</th>
+              <th className="pb-3 px-2 text-center">CTR</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -187,30 +187,30 @@ export function CampaignsTable({
                       {campaign.campaign_name}
                     </div>
                   </td>
-                  <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.spend)}</td>
-                  <td className="py-3 pr-4 text-right text-white/80">{campaign.link_clicks}</td>
-                  <td className="py-3 pr-4 text-right">
+                  <td className="py-3 px-2 text-center text-white/80">{formatCurrency(campaign.spend)}</td>
+                  <td className="py-3 px-2 text-center text-white/80">{campaign.link_clicks}</td>
+                  <td className="py-3 px-2 text-center">
                     {campaign.load_rate !== null ? (
                       <span className="text-cyan-300">{formatPercent(campaign.load_rate)}</span>
                     ) : (
                       <span className="text-white/30">—</span>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-right text-white/80">{formatCurrency(campaign.cpc)}</td>
-                  <td className="py-3 pr-4 text-right">
+                  <td className="py-3 px-2 text-center text-white/80">{formatCurrency(campaign.cpc)}</td>
+                  <td className="py-3 px-2 text-center">
                     <span className={conversions > 0 ? 'text-green-400 font-semibold' : 'text-white/40'}>{conversions}</span>
                     {isSales && (
-                      <div className="text-[11px] text-white/35 mt-0.5">Meta: {campaign.purchases || 0}</div>
+                      <div className="text-[11px] text-white/35 mt-0.5 text-center">Meta: {campaign.purchases || 0}</div>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-right">
+                  <td className="py-3 px-2 text-center">
                     {costPer > 0 ? (
                       <span className="text-yellow-300">{formatCurrency(costPer)}</span>
                     ) : (
                       <span className="text-white/30">—</span>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-right text-blue-400">{formatPercent(campaign.ctr)}</td>
+                  <td className="py-3 px-2 text-center text-blue-400">{formatPercent(campaign.ctr)}</td>
                 </tr>
               )
             })}
