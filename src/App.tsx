@@ -101,7 +101,20 @@ export default function App() {
       const data = await getAggregatedMetrics(selectedDataProduct, dateRange.start, dateRange.end)
       setLatestAvailableDate(null)
 
-      if (data?.dailyData) {
+      const isTodayOnlyRange = dateRange.start === todayBRT && dateRange.end === todayBRT
+      const creativeLeadsTotal = rawCreatives.reduce((sum, creative) => {
+        const creativeLeads = (creative.sheet_leads_utm || 0) > 0 ? creative.sheet_leads_utm || 0 : creative.leads || 0
+        return sum + creativeLeads
+      }, 0)
+      const dailyLeadsTotal = data ? ((data.sheetLeads || 0) > 0 ? data.sheetLeads || 0 : data.leads || 0) : 0
+      const shouldForceCreativesFallback =
+        Boolean(data?.dailyData) &&
+        !isSalesProduct &&
+        isTodayOnlyRange &&
+        creativeLeadsTotal > 0 &&
+        dailyLeadsTotal === 0
+
+      if (data?.dailyData && !shouldForceCreativesFallback) {
         setCampaigns(aggregateCampaigns(rawCreatives))
         setMetrics(data)
         setDailyData(data.dailyData)
