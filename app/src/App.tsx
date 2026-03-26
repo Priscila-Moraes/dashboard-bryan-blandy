@@ -136,26 +136,14 @@ export default function App() {
         : await getAggregatedMetrics(selectedDataProduct, dateRange.start, dateRange.end)
       setLatestAvailableDate(null)
 
-      const isTodayOnlyRange = dateRange.start === todayBRT && dateRange.end === todayBRT
-      const creativeLeadsTotal = rawCreatives.reduce((sum, creative) => {
-        const creativeLeads = (creative.sheet_leads_utm || 0) > 0 ? creative.sheet_leads_utm || 0 : creative.leads || 0
-        return sum + creativeLeads
-      }, 0)
-      const dailyLeadsTotal = data ? ((data.sheetLeads || 0) > 0 ? data.sheetLeads || 0 : data.leads || 0) : 0
-      const shouldForceCreativesFallback =
-        Boolean(data?.dailyData) &&
-        !isSalesProduct &&
-        !isVideoViewProduct &&
-        isTodayOnlyRange &&
-        creativeLeadsTotal > 0 &&
-        dailyLeadsTotal === 0
+      const allowCreativesFallback = isSalesProduct || isVideoViewProduct
 
-      if (data?.dailyData && !shouldForceCreativesFallback) {
+      if (data?.dailyData) {
         setCampaigns(aggregateCampaigns(rawCreatives))
         setAdSets(showAdSetsSection ? aggregateAdSets(rawCreatives) : [])
         setMetrics(data)
         setDailyData(data.dailyData)
-      } else if (rawCreatives.length > 0) {
+      } else if (allowCreativesFallback && rawCreatives.length > 0) {
         setCampaigns(aggregateCampaigns(rawCreatives))
         setAdSets(showAdSetsSection ? aggregateAdSets(rawCreatives) : [])
         // Fallback: se o job do daily_summary nao rodou para hoje/ontem mas os criativos existem,
@@ -394,7 +382,7 @@ export default function App() {
                 {lastUpdate && (
                   <span className="text-xs text-white/40">
                     Atualizado: {lastUpdate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    {includesPartialDay && (
+                    {includesPartialDay && usingCreativesFallback && (
                       <span className="ml-2 text-yellow-400/80">● hoje parcial</span>
                     )}
                   </span>
